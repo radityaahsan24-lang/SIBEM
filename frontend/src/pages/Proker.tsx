@@ -33,8 +33,9 @@ const Proker = () => {
     fetchProkers();
   }, []);
 
-  const fetchProkers = async () => {
-    setIsFetching(true);
+  // PERUBAHAN 1: Tambahkan parameter 'silent' agar saat nambah/edit data, tabel tidak nge-blank loading
+  const fetchProkers = async (silent = false) => {
+    if (!silent) setIsFetching(true);
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get("http://127.0.0.1:8000/api/proker", {
@@ -44,7 +45,7 @@ const Proker = () => {
     } catch (error) {
       console.error("Gagal mengambil data proker:", error);
     } finally {
-      setIsFetching(false);
+      if (!silent) setIsFetching(false);
     }
   };
 
@@ -94,7 +95,8 @@ const Proker = () => {
       }
 
       setIsModalOpen(false);
-      fetchProkers();
+      // PERUBAHAN 2: Fetch data diam-diam tanpa merubah isFetching jadi true
+      fetchProkers(true); 
     } catch (error) {
       console.error("Gagal menyimpan proker:", error);
       alert("Terjadi kesalahan saat menyimpan data.");
@@ -103,7 +105,17 @@ const Proker = () => {
     }
   };
 
+  // PERUBAHAN 3: Optimistic Update untuk Status (ACC/Tolak)
   const handleStatusChange = async (kegiatan: ProkerData, newStatus: string) => {
+    const dataSebelumnya = [...daftarKegiatan];
+
+    // Langsung ubah tampilan status di tabel detik itu juga
+    setDaftarKegiatan((prev) =>
+      prev.map((item) =>
+        item.id === kegiatan.id ? { ...item, status: newStatus } : item
+      )
+    );
+
     try {
       const token = localStorage.getItem("token");
       await axios.put(`http://127.0.0.1:8000/api/proker/${kegiatan.id}`, {
@@ -112,9 +124,11 @@ const Proker = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchProkers();
+      // Tidak perlu fetchProkers() lagi karena tabel sudah otomatis update
     } catch (error) {
       console.error("Gagal mengubah status:", error);
+      // Jika server error, kembalikan tampilan seperti semula (Rollback)
+      setDaftarKegiatan(dataSebelumnya);
       alert("Terjadi kesalahan saat memvalidasi proker.");
     }
   };
@@ -124,24 +138,29 @@ const Proker = () => {
     setIsDeleteModalOpen(true);
   };
 
+  // PERUBAHAN 4: Optimistic Update untuk Hapus Data
   const confirmDelete = async () => {
     if (deleteTargetId === null) return;
-    setIsLoading(true);
+    
+    const targetId = deleteTargetId;
+    const dataSebelumnya = [...daftarKegiatan];
+
+    // Langsung hapus baris dari tabel dan tutup modal detik itu juga
+    setDaftarKegiatan((prev) => prev.filter((item) => item.id !== targetId));
+    setIsDeleteModalOpen(false);
+    setDeleteTargetId(null);
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/api/proker/${deleteTargetId}`, {
+      await axios.delete(`http://127.0.0.1:8000/api/proker/${targetId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setIsDeleteModalOpen(false);
-      setDeleteTargetId(null);
-      fetchProkers();
+      // Sukses! Tidak perlu fetchProkers() lagi
     } catch (error) {
       console.error("Gagal menghapus proker:", error);
+      // Jika server gagal menghapus, kembalikan datanya ke tabel
+      setDaftarKegiatan(dataSebelumnya);
       alert("Terjadi kesalahan saat menghapus data.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -201,7 +220,7 @@ const Proker = () => {
           <table className="w-full min-w-[800px] text-left">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="p-4 text-sm font-semibold text-gray-600">ID</th>
+                <th className="p-4 text-sm font-semibold text-gray-600">No.</th>
                 <th className="p-4 text-sm font-semibold text-gray-600">
                   Nama Kegiatan
                 </th>
@@ -230,13 +249,13 @@ const Proker = () => {
                   </td>
                 </tr>
               ) : daftarKegiatan.length > 0 ? (
-                daftarKegiatan.map((kegiatan) => (
+                daftarKegiatan.map((kegiatan, i) => (
                   <tr
                     key={kegiatan.id}
                     className="border-b border-gray-50 hover:bg-gray-50"
                   >
                     <td className="p-4 text-sm text-gray-700 font-medium">
-                      K-{kegiatan.id}
+                      {i + 1}
                     </td>
                     <td className="p-4 text-sm text-gray-800">
                       {kegiatan.nama_proker}
@@ -304,7 +323,6 @@ const Proker = () => {
       {/* MODAL TAMBAH / EDIT */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          {/* BERUBAH: w-[95%] sm:w-full, max-h-[90vh] overflow-y-auto untuk responsif di HP */}
           <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-[95%] sm:w-full max-w-md p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-gray-800">
               {isEditMode ? "Edit Program Kerja" : "Tambah Program Kerja"}
@@ -315,7 +333,6 @@ const Proker = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nama Proker <span className="text-red-500">*</span>
                 </label>
-                {/* BERUBAH: Tambahan text-base sm:text-sm agar tidak auto-zoom di HP */}
                 <input
                   type="text"
                   required
@@ -444,14 +461,10 @@ const Proker = () => {
               </button>
               <button
                 onClick={confirmDelete}
-                disabled={isLoading}
-                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium w-full flex justify-center items-center disabled:bg-red-400 text-sm sm:text-base"
+                // Hapus efek isLoading di tombol karena modal akan langsung tertutup
+                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium w-full flex justify-center items-center text-sm sm:text-base"
               >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  "Ya, Hapus"
-                )}
+                Ya, Hapus
               </button>
             </div>
           </div>

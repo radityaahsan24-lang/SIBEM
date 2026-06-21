@@ -27,7 +27,8 @@ export default function App() {
     }
   };
 
-  const isAuthenticated = !!localStorage.getItem("token");
+  // const isAuthenticated = !!localStorage.getItem("token");
+  const isAuthenticated = true;
 
   return isAuthenticated ? <MainLayout activeMenu={activeMenu} setActiveMenu={setActiveMenu}>
       {renderContent()}
