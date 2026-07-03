@@ -2,6 +2,7 @@ import { useState } from "react";
 import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Proker from "./pages/Proker";
+import Presensi from "./pages/Presensi";
 import Login from "./pages/Login";
 
 export default function App() {
@@ -13,6 +14,8 @@ export default function App() {
         return <Dashboard />;
       case "Kegiatan":
         return <Proker />;
+      case "Presensi":
+        return <Presensi />;
       default:
         return (
           <div className="bg-white p-10 rounded-[40px] shadow-sm flex items-center justify-center h-96 border border-gray-100">
@@ -27,8 +30,8 @@ export default function App() {
     }
   };
 
-  // const isAuthenticated = !!localStorage.getItem("token");
-  const isAuthenticated = true;
+  const isAuthenticated = !!localStorage.getItem("token");
+  // const isAuthenticated = true;
 
   return isAuthenticated ? <MainLayout activeMenu={activeMenu} setActiveMenu={setActiveMenu}>
       {renderContent()}

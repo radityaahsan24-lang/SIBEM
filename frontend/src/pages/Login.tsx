@@ -20,7 +20,8 @@ export default function Login() {
 
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("role", response.data.user.role);
-      
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+
       window.location.href = "/";
     } catch (error: any) {
       // Menampilkan pesan error spesifik jika ada dari server, atau pesan default

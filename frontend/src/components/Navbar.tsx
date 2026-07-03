@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Menerima perintah onMenuClick dari MainLayout
 interface NavbarProps {
@@ -7,9 +7,20 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
   const handleLogout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
+  localStorage.removeItem("user");
   window.location.href = "/login"; // Kembali ke login
 };
 
@@ -50,11 +61,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             className="flex items-center gap-3 text-left focus:outline-none hover:opacity-80 transition-opacity"
           >
             <div className="hidden md:block text-right">
-              <p className="text-sm font-bold text-gray-800">Salsabila Alun</p>
-              <p className="text-xs text-gray-400">Presiden BEM</p>
+              <p className="text-sm font-bold text-gray-800">{user?.name}</p>
+              <p className="text-xs text-gray-400">{user?.role}</p>
             </div>
             <div className="h-9 w-9 md:h-10 md:w-10 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
-              SA
+              {user?.name?.split(" ").map((i: string) => i[0]).join("").toUpperCase( )}
             </div>
           </button>
 

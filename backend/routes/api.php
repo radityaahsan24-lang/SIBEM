@@ -24,6 +24,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/test-koneksi', function () {
     return response()->json([
         'status' => 'Sukses!',
-        'message' => 'Backend Laravel siap melayani Frontend React TypeScript. HAHAHA',
+        'message' => 'Backend Laravel siap melayani Frontend React TypeScript.',
     ]);
 });
