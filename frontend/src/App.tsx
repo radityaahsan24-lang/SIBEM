@@ -3,6 +3,7 @@ import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Proker from "./pages/Proker";
 import Login from "./pages/Login";
+import Laporan from "./pages/Laporan";
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState("Overview"); // Default menu sesuai desain
@@ -13,6 +14,8 @@ export default function App() {
         return <Dashboard />;
       case "Kegiatan":
         return <Proker />;
+      case "Laporan":
+        return <Laporan />;
       default:
         return (
           <div className="bg-white p-10 rounded-[40px] shadow-sm flex items-center justify-center h-96 border border-gray-100">
