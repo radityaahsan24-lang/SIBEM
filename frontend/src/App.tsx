@@ -5,6 +5,7 @@ import Proker from "./pages/Proker";
 import Presensi from "./pages/Presensi";
 import Login from "./pages/Login";
 import Laporan from "./pages/Laporan";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState("Overview"); // Default menu sesuai desain
@@ -34,11 +35,17 @@ export default function App() {
   };
 
   const isAuthenticated = !!localStorage.getItem("token");
+  const role = localStorage.getItem("role");
   // const isAuthenticated = true;
 
-  return isAuthenticated ? <MainLayout activeMenu={activeMenu} setActiveMenu={setActiveMenu}>
-      {renderContent()}
-    </MainLayout> : <Login />;
-
- 
+  return !isAuthenticated ? (
+    <Login />
+  ) : role?.toLowerCase() === "admin" ? (
+    <AdminDashboard />
+  ) : (
+    <MainLayout activeMenu={activeMenu} setActiveMenu={setActiveMenu}>
+      {" "}
+      {renderContent()}{" "}
+    </MainLayout>
+  );
 }

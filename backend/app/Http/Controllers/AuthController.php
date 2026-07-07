@@ -38,4 +38,43 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    // Fungsi khusus untuk Admin menambahkan user/pengurus baru
+    public function createUser(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|unique:users',
+            'password' => 'required|string|min:8', // Minimal 8 karakter
+            'role'     => 'required|string'
+        ]);
+
+        // Masukkan ke database
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password), // Password di-hash
+            'role'     => $request->role
+        ]);
+
+        return response()->json([
+            'message' => 'User baru berhasil ditambahkan ke database!',
+            'data'    => $user
+        ], 201);
+    }
+
+    // Fungsi untuk mengambil semua data pengurus (ditampilkan di tabel Admin)
+    public function getAllUsers()
+    {
+        // Mengambil id, name, email, dan role dari tabel users, diurutkan dari yang terbaru
+        $users = User::select('id', 'name', 'email', 'role')
+                     ->orderBy('created_at', 'asc')
+                     ->get();
+
+        return response()->json([
+            'message' => 'Berhasil mengambil daftar pengurus',
+            'data'    => $users
+        ], 200);
+    }
 }
