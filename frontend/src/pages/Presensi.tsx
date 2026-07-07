@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-interface ProkerData {
+interface PresensiData {
   id: number;
-  nama_proker: string;
+  nama_anggota: string;
   divisi: string;
-  deskripsi: string | null;
-  status: string;
-  tanggal_pelaksanaan: string | null;
+  kegiatan: string;
+  tanggal: string;
+  status: string; // "hadir" | "izin" | "alpha"
+  keterangan: string | null;
 }
 
-const Proker = () => {
-  const [daftarKegiatan, setDaftarKegiatan] = useState<ProkerData[]>([]);
+const Presensi = () => {
+  const [daftarPresensi, setDaftarPresensi] = useState<PresensiData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -22,28 +23,32 @@ const Proker = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
+  const [filterKegiatan, setFilterKegiatan] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
   const [formData, setFormData] = useState({
-    nama_proker: "",
+    nama_anggota: "",
     divisi: "",
-    deskripsi: "",
-    tanggal_pelaksanaan: "",
+    kegiatan: "",
+    tanggal: "",
+    status: "hadir",
+    keterangan: "",
   });
 
   useEffect(() => {
-    fetchProkers();
+    fetchPresensi();
   }, []);
 
-  // PERUBAHAN 1: Tambahkan parameter 'silent' agar saat nambah/edit data, tabel tidak nge-blank loading
-  const fetchProkers = async (silent = false) => {
+  const fetchPresensi = async (silent = false) => {
     if (!silent) setIsFetching(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://127.0.0.1:8000/api/proker", {
+      const response = await axios.get("http://127.0.0.1:8000/api/presensi", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setDaftarKegiatan(response.data);
+      setDaftarPresensi(response.data);
     } catch (error) {
-      console.error("Gagal mengambil data proker:", error);
+      console.error("Gagal mengambil data presensi:", error);
     } finally {
       if (!silent) setIsFetching(false);
     }
@@ -51,25 +56,29 @@ const Proker = () => {
 
   const handleAddClick = () => {
     setFormData({
-      nama_proker: "",
+      nama_anggota: "",
       divisi: "",
-      deskripsi: "",
-      tanggal_pelaksanaan: "",
+      kegiatan: "",
+      tanggal: "",
+      status: "hadir",
+      keterangan: "",
     });
     setIsEditMode(false);
     setEditId(null);
     setIsModalOpen(true);
   };
 
-  const handleEditClick = (kegiatan: ProkerData) => {
+  const handleEditClick = (presensi: PresensiData) => {
     setFormData({
-      nama_proker: kegiatan.nama_proker,
-      divisi: kegiatan.divisi,
-      deskripsi: kegiatan.deskripsi || "",
-      tanggal_pelaksanaan: kegiatan.tanggal_pelaksanaan || "",
+      nama_anggota: presensi.nama_anggota,
+      divisi: presensi.divisi,
+      kegiatan: presensi.kegiatan,
+      tanggal: presensi.tanggal,
+      status: presensi.status,
+      keterangan: presensi.keterangan || "",
     });
     setIsEditMode(true);
-    setEditId(kegiatan.id);
+    setEditId(presensi.id);
     setIsModalOpen(true);
   };
 
@@ -82,54 +91,48 @@ const Proker = () => {
 
       if (isEditMode && editId !== null) {
         await axios.put(
-          `http://127.0.0.1:8000/api/proker/${editId}`,
+          `http://127.0.0.1:8000/api/presensi/${editId}`,
           formData,
           {
             headers: { Authorization: `Bearer ${token}` },
-          },
+          }
         );
       } else {
-        await axios.post("http://127.0.0.1:8000/api/proker", formData, {
+        await axios.post("http://127.0.0.1:8000/api/presensi", formData, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
 
       setIsModalOpen(false);
-      // PERUBAHAN 2: Fetch data diam-diam tanpa merubah isFetching jadi true
-      fetchProkers(true); 
+      fetchPresensi(true);
     } catch (error) {
-      console.error("Gagal menyimpan proker:", error);
+      console.error("Gagal menyimpan presensi:", error);
       alert("Terjadi kesalahan saat menyimpan data.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // PERUBAHAN 3: Optimistic Update untuk Status (ACC/Tolak)
-  const handleStatusChange = async (kegiatan: ProkerData, newStatus: string) => {
-    const dataSebelumnya = [...daftarKegiatan];
+  const handleStatusChange = async (presensi: PresensiData, newStatus: string) => {
+    const dataSebelumnya = [...daftarPresensi];
 
-    // Langsung ubah tampilan status di tabel detik itu juga
-    setDaftarKegiatan((prev) =>
+    setDaftarPresensi((prev) =>
       prev.map((item) =>
-        item.id === kegiatan.id ? { ...item, status: newStatus } : item
+        item.id === presensi.id ? { ...item, status: newStatus } : item
       )
     );
 
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://127.0.0.1:8000/api/proker/${kegiatan.id}`, {
-        ...kegiatan,
-        status: newStatus
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // Tidak perlu fetchProkers() lagi karena tabel sudah otomatis update
+      await axios.put(
+        `http://127.0.0.1:8000/api/presensi/${presensi.id}`,
+        { ...presensi, status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
     } catch (error) {
       console.error("Gagal mengubah status:", error);
-      // Jika server error, kembalikan tampilan seperti semula (Rollback)
-      setDaftarKegiatan(dataSebelumnya);
-      alert("Terjadi kesalahan saat memvalidasi proker.");
+      setDaftarPresensi(dataSebelumnya);
+      alert("Terjadi kesalahan saat mengubah status presensi.");
     }
   };
 
@@ -138,39 +141,35 @@ const Proker = () => {
     setIsDeleteModalOpen(true);
   };
 
-  // PERUBAHAN 4: Optimistic Update untuk Hapus Data
   const confirmDelete = async () => {
     if (deleteTargetId === null) return;
-    
-    const targetId = deleteTargetId;
-    const dataSebelumnya = [...daftarKegiatan];
 
-    // Langsung hapus baris dari tabel dan tutup modal detik itu juga
-    setDaftarKegiatan((prev) => prev.filter((item) => item.id !== targetId));
+    const targetId = deleteTargetId;
+    const dataSebelumnya = [...daftarPresensi];
+
+    setDaftarPresensi((prev) => prev.filter((item) => item.id !== targetId));
     setIsDeleteModalOpen(false);
     setDeleteTargetId(null);
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/api/proker/${targetId}`, {
+      await axios.delete(`http://127.0.0.1:8000/api/presensi/${targetId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Sukses! Tidak perlu fetchProkers() lagi
     } catch (error) {
-      console.error("Gagal menghapus proker:", error);
-      // Jika server gagal menghapus, kembalikan datanya ke tabel
-      setDaftarKegiatan(dataSebelumnya);
+      console.error("Gagal menghapus presensi:", error);
+      setDaftarPresensi(dataSebelumnya);
       alert("Terjadi kesalahan saat menghapus data.");
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "disetujui":
+      case "hadir":
         return "bg-green-100 text-green-800";
-      case "pending":
+      case "izin":
         return "bg-yellow-100 text-yellow-800";
-      case "ditolak":
+      case "alpha":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -179,12 +178,12 @@ const Proker = () => {
 
   const formatStatusText = (status: string) => {
     switch (status) {
-      case "pending":
-        return "Menunggu Validasi";
-      case "disetujui":
-        return "Disetujui";
-      case "ditolak":
-        return "Ditolak";
+      case "hadir":
+        return "Hadir";
+      case "izin":
+        return "Izin";
+      case "alpha":
+        return "Alpha";
       default:
         return status;
     }
@@ -192,29 +191,84 @@ const Proker = () => {
 
   const formatTanggal = (tanggal: string | null) => {
     if (!tanggal) return "-";
-    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-    return new Date(tanggal).toLocaleDateString('id-ID', options);
+    const options: Intl.DateTimeFormatOptions = {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    };
+    return new Date(tanggal).toLocaleDateString("id-ID", options);
   };
+
+  const daftarTerfilter = daftarPresensi.filter((item) => {
+    const cocokKegiatan = filterKegiatan
+      ? item.kegiatan.toLowerCase().includes(filterKegiatan.toLowerCase())
+      : true;
+    const cocokStatus = filterStatus ? item.status === filterStatus : true;
+    return cocokKegiatan && cocokStatus;
+  });
+
+  const totalHadir = daftarTerfilter.filter((i) => i.status === "hadir").length;
+  const totalIzin = daftarTerfilter.filter((i) => i.status === "izin").length;
+  const totalAlpha = daftarTerfilter.filter((i) => i.status === "alpha").length;
 
   return (
     <div className="space-y-6 relative">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
-            Manaje  men Program Kerja
+            Manajemen Presensi
           </h1>
           <p className="text-gray-500 text-sm md:text-base mt-1">
-            Kelola pengajuan dan pelaksanaan proker himpunan.
+            Catat dan pantau kehadiran anggota pada setiap kegiatan.
           </p>
         </div>
         <button
           onClick={handleAddClick}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm font-medium w-full sm:w-auto"
         >
-          + Tambah Proker
+          + Tambah Presensi
         </button>
       </div>
 
+      {/* Ringkasan */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-green-700">{totalHadir}</p>
+          <p className="text-sm text-green-600 mt-1">Hadir</p>
+        </div>
+        <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-yellow-700">{totalIzin}</p>
+          <p className="text-sm text-yellow-600 mt-1">Izin</p>
+        </div>
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-red-700">{totalAlpha}</p>
+          <p className="text-sm text-red-600 mt-1">Alpha</p>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="text"
+          placeholder="Cari nama kegiatan..."
+          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+          value={filterKegiatan}
+          onChange={(e) => setFilterKegiatan(e.target.value)}
+        />
+        <select
+          className="sm:w-48 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+        >
+          <option value="">Semua Status</option>
+          <option value="hadir">Hadir</option>
+          <option value="izin">Izin</option>
+          <option value="alpha">Alpha</option>
+        </select>
+      </div>
+
+      {/* Tabel */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px] text-left">
@@ -222,10 +276,13 @@ const Proker = () => {
               <tr>
                 <th className="p-4 text-sm font-semibold text-gray-600">No.</th>
                 <th className="p-4 text-sm font-semibold text-gray-600">
-                  Nama Kegiatan
+                  Nama Anggota
                 </th>
                 <th className="p-4 text-sm font-semibold text-gray-600">
                   Divisi
+                </th>
+                <th className="p-4 text-sm font-semibold text-gray-600">
+                  Kegiatan
                 </th>
                 <th className="p-4 text-sm font-semibold text-gray-600">
                   Tanggal
@@ -241,66 +298,68 @@ const Proker = () => {
             <tbody>
               {isFetching ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                  <td colSpan={7} className="p-8 text-center text-gray-500">
                     <div className="flex flex-col items-center justify-center">
                       <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <p>Memuat data program kerja...</p>
+                      <p>Memuat data presensi...</p>
                     </div>
                   </td>
                 </tr>
-              ) : daftarKegiatan.length > 0 ? (
-                daftarKegiatan.map((kegiatan, i) => (
+              ) : daftarTerfilter.length > 0 ? (
+                daftarTerfilter.map((presensi, i) => (
                   <tr
-                    key={kegiatan.id}
+                    key={presensi.id}
                     className="border-b border-gray-50 hover:bg-gray-50"
                   >
                     <td className="p-4 text-sm text-gray-700 font-medium">
                       {i + 1}
                     </td>
                     <td className="p-4 text-sm text-gray-800">
-                      {kegiatan.nama_proker}
+                      {presensi.nama_anggota}
                     </td>
                     <td className="p-4 text-sm text-gray-600">
-                      {kegiatan.divisi}
+                      {presensi.divisi}
                     </td>
                     <td className="p-4 text-sm text-gray-600">
-                      {formatTanggal(kegiatan.tanggal_pelaksanaan)}
+                      {presensi.kegiatan}
+                    </td>
+                    <td className="p-4 text-sm text-gray-600">
+                      {formatTanggal(presensi.tanggal)}
                     </td>
                     <td className="p-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(kegiatan.status)}`}
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(presensi.status)}`}
                       >
-                        {formatStatusText(kegiatan.status)}
+                        {formatStatusText(presensi.status)}
                       </span>
                     </td>
                     <td className="p-4 flex justify-center gap-2">
-                      {kegiatan.status === 'pending' && (
-                        <>
-                          <button 
-                            onClick={() => handleStatusChange(kegiatan, 'disetujui')}
-                            className="text-green-700 bg-green-100 hover:bg-green-200 text-xs font-bold px-2 py-1 rounded-md transition"
-                            title="Setujui Proker"
-                          >
-                            ACC
-                          </button>
-                          <button 
-                            onClick={() => handleStatusChange(kegiatan, 'ditolak')}
-                            className="text-orange-700 bg-orange-100 hover:bg-orange-200 text-xs font-bold px-2 py-1 rounded-md transition"
-                            title="Tolak Proker"
-                          >
-                            TOLAK
-                          </button>
-                        </>
+                      {presensi.status === "alpha" && (
+                        <button
+                          onClick={() => handleStatusChange(presensi, "izin")}
+                          className="text-yellow-700 bg-yellow-100 hover:bg-yellow-200 text-xs font-bold px-2 py-1 rounded-md transition"
+                          title="Ubah ke Izin"
+                        >
+                          IZIN
+                        </button>
                       )}
-                      
+                      {presensi.status !== "hadir" && (
+                        <button
+                          onClick={() => handleStatusChange(presensi, "hadir")}
+                          className="text-green-700 bg-green-100 hover:bg-green-200 text-xs font-bold px-2 py-1 rounded-md transition"
+                          title="Tandai Hadir"
+                        >
+                          HADIR
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleEditClick(kegiatan)}
+                        onClick={() => handleEditClick(presensi)}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteClick(kegiatan.id)}
+                        onClick={() => handleDeleteClick(presensi.id)}
                         className="text-red-600 hover:text-red-800 text-sm font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition"
                       >
                         Hapus
@@ -310,8 +369,10 @@ const Proker = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="p-4 text-center text-gray-500">
-                    Belum ada data program kerja.
+                  <td colSpan={7} className="p-4 text-center text-gray-500">
+                    {filterKegiatan || filterStatus
+                      ? "Tidak ada data yang cocok dengan filter."
+                      : "Belum ada data presensi."}
                   </td>
                 </tr>
               )}
@@ -325,21 +386,21 @@ const Proker = () => {
         <div className="fixed inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-[95%] sm:w-full max-w-md p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-gray-800">
-              {isEditMode ? "Edit Program Kerja" : "Tambah Program Kerja"}
+              {isEditMode ? "Edit Presensi" : "Tambah Presensi"}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nama Proker <span className="text-red-500">*</span>
+                  Nama Anggota <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.nama_proker}
+                  value={formData.nama_anggota}
                   onChange={(e) =>
-                    setFormData({ ...formData, nama_proker: e.target.value })
+                    setFormData({ ...formData, nama_anggota: e.target.value })
                   }
                 />
               </div>
@@ -370,32 +431,63 @@ const Proker = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Deskripsi Kegiatan
+                  Nama Kegiatan <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  rows={2}
+                <input
+                  type="text"
+                  required
                   className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.deskripsi}
+                  value={formData.kegiatan}
                   onChange={(e) =>
-                    setFormData({ ...formData, deskripsi: e.target.value })
+                    setFormData({ ...formData, kegiatan: e.target.value })
                   }
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tanggal Pelaksanaan <span className="text-red-500">*</span>
+                  Tanggal <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   required
                   className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.tanggal_pelaksanaan}
+                  value={formData.tanggal}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      tanggal_pelaksanaan: e.target.value,
-                    })
+                    setFormData({ ...formData, tanggal: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status Kehadiran <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
+                >
+                  <option value="hadir">Hadir</option>
+                  <option value="izin">Izin</option>
+                  <option value="alpha">Alpha</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Keterangan
+                </label>
+                <textarea
+                  rows={2}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
+                  placeholder="Opsional — isi alasan izin atau catatan lainnya"
+                  value={formData.keterangan}
+                  onChange={(e) =>
+                    setFormData({ ...formData, keterangan: e.target.value })
                   }
                 />
               </div>
@@ -442,11 +534,11 @@ const Proker = () => {
             </div>
 
             <h3 className="text-lg font-bold text-gray-900 mb-2">
-              Hapus Program Kerja?
+              Hapus Data Presensi?
             </h3>
             <p className="text-sm text-gray-500 mb-6">
-              Apakah kamu yakin ingin menghapus data proker ini? Data yang sudah
-              dihapus tidak dapat dikembalikan.
+              Apakah kamu yakin ingin menghapus data presensi ini? Data yang
+              sudah dihapus tidak dapat dikembalikan.
             </p>
 
             <div className="flex justify-center gap-3">
@@ -461,7 +553,6 @@ const Proker = () => {
               </button>
               <button
                 onClick={confirmDelete}
-                // Hapus efek isLoading di tombol karena modal akan langsung tertutup
                 className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium w-full flex justify-center items-center text-sm sm:text-base"
               >
                 Ya, Hapus
@@ -474,4 +565,4 @@ const Proker = () => {
   );
 };
 
-export default Proker;
+export default Presensi;

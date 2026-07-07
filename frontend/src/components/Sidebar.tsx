@@ -17,6 +17,7 @@ export default function Sidebar({ activeMenu, setActiveMenu, isMobileOpen, setIs
     { name: "Anggaran", icon: "💳" },
     { name: "Kementerian", icon: "🏛️" },
     { name: "Laporan", icon: "📊" },
+    { name: "Presensi", icon: "📅" },
     { name: "Pengaturan", icon: "⚙️" },
   ];
 
