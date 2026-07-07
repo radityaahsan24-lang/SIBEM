@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import Proker from "./pages/Proker";
 import Presensi from "./pages/Presensi";
 import Login from "./pages/Login";
+import Laporan from "./pages/Laporan";
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState("Overview"); // Default menu sesuai desain
@@ -14,6 +15,8 @@ export default function App() {
         return <Dashboard />;
       case "Kegiatan":
         return <Proker />;
+      case "Laporan":
+        return <Laporan />;
       case "Presensi":
         return <Presensi />;
       default:
