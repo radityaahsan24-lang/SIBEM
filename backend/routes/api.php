@@ -18,6 +18,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/proker', [ProkerController::class, 'store']);
     Route::put('/proker/{id}', [ProkerController::class, 'update']);
     Route::delete('/proker/{id}', [ProkerController::class, 'destroy']);
+
+    // Rute untuk Admin menambah akun pengurus baru
+    Route::post('/users', [AuthController::class, 'createUser']);
+
+    // Rute untuk melihat daftar akun
+    Route::get('/users', [AuthController::class, 'getAllUsers']);
 });
 
 // Hanya untuk uji coba
