@@ -25,7 +25,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 };
 
   return (
-    <header className="flex justify-between items-center mb-6 md:mb-8">
+    <header className="flex justify-between items-center">
       {/* Bagian Kiri: Tombol HP + Teks Sambutan */}
       <div className="flex items-center gap-3">
         {/* Tombol Hamburger HP (Otomatis hilang di Laptop) */}
