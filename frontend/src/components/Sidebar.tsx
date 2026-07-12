@@ -1,5 +1,5 @@
 import { useState } from "react";
-import logoKarsacipta from "../assets/logo-karsacipta.jpeg";
+import logoKarsacipta from "../assets/logo-karsacipta.png";
 
 interface SidebarProps {
   activeMenu: string;
