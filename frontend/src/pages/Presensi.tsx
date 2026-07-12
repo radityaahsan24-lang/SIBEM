@@ -1,568 +1,369 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-interface PresensiData {
+interface SesiPresensi {
   id: number;
-  nama_anggota: string;
-  divisi: string;
-  kegiatan: string;
+  nama_kegiatan: string;
+  tingkatan: string;
+  kementerian: string | null;
+  kode_presensi: string;
   tanggal: string;
-  status: string; // "hadir" | "izin" | "alpha"
-  keterangan: string | null;
+  waktu_mulai: string;
+  batas_waktu: string;
+  created_at: string;
+  is_active: boolean;
 }
 
-const Presensi = () => {
-  const [daftarPresensi, setDaftarPresensi] = useState<PresensiData[]>([]);
+export default function Presensi() {
+  const [daftarSesi, setDaftarSesi] = useState<SesiPresensi[]>([]);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
-
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-
-  const [filterKegiatan, setFilterKegiatan] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [isFormLoading, setIsFormLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const [formData, setFormData] = useState({
-    nama_anggota: "",
-    divisi: "",
-    kegiatan: "",
+    nama_kegiatan: "",
+    tingkatan: "Komunal",
+    kementerian: "",
     tanggal: "",
-    status: "hadir",
-    keterangan: "",
+    waktu_mulai: "",
+    batas_waktu: "",
   });
 
-  useEffect(() => {
-    fetchPresensi();
-  }, []);
+  const [visibleCodes, setVisibleCodes] = useState<{ [key: number]: boolean }>({});
 
-  const fetchPresensi = async (silent = false) => {
-    if (!silent) setIsFetching(true);
+  const fetchSesiPresensi = async () => {
+    setIsPageLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://127.0.0.1:8000/api/presensi", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await axios.get("http://127.0.0.1:8000/api/sesi-presensi", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      setDaftarPresensi(response.data);
+      setDaftarSesi(response.data.data || []);
     } catch (error) {
-      console.error("Gagal mengambil data presensi:", error);
+      console.error("Gagal mengambil data sesi presensi:", error);
     } finally {
-      if (!silent) setIsFetching(false);
+      setIsPageLoading(false);
     }
   };
 
-  const handleAddClick = () => {
-    setFormData({
-      nama_anggota: "",
-      divisi: "",
-      kegiatan: "",
-      tanggal: "",
-      status: "hadir",
-      keterangan: "",
-    });
-    setIsEditMode(false);
-    setEditId(null);
-    setIsModalOpen(true);
+  useEffect(() => {
+    fetchSesiPresensi();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleEditClick = (presensi: PresensiData) => {
-    setFormData({
-      nama_anggota: presensi.nama_anggota,
-      divisi: presensi.divisi,
-      kegiatan: presensi.kegiatan,
-      tanggal: presensi.tanggal,
-      status: presensi.status,
-      keterangan: presensi.keterangan || "",
-    });
-    setIsEditMode(true);
-    setEditId(presensi.id);
-    setIsModalOpen(true);
+  const toggleCodeVisibility = (id: number) => {
+    setVisibleCodes((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsFormLoading(true);
+    setMessage("");
 
-    try {
-      const token = localStorage.getItem("token");
-
-      if (isEditMode && editId !== null) {
-        await axios.put(
-          `http://127.0.0.1:8000/api/presensi/${editId}`,
-          formData,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } else {
-        await axios.post("http://127.0.0.1:8000/api/presensi", formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-
-      setIsModalOpen(false);
-      fetchPresensi(true);
-    } catch (error) {
-      console.error("Gagal menyimpan presensi:", error);
-      alert("Terjadi kesalahan saat menyimpan data.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStatusChange = async (presensi: PresensiData, newStatus: string) => {
-    const dataSebelumnya = [...daftarPresensi];
-
-    setDaftarPresensi((prev) =>
-      prev.map((item) =>
-        item.id === presensi.id ? { ...item, status: newStatus } : item
-      )
-    );
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `http://127.0.0.1:8000/api/presensi/${presensi.id}`,
-        { ...presensi, status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (error) {
-      console.error("Gagal mengubah status:", error);
-      setDaftarPresensi(dataSebelumnya);
-      alert("Terjadi kesalahan saat mengubah status presensi.");
-    }
-  };
-
-  const handleDeleteClick = (id: number) => {
-    setDeleteTargetId(id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (deleteTargetId === null) return;
-
-    const targetId = deleteTargetId;
-    const dataSebelumnya = [...daftarPresensi];
-
-    setDaftarPresensi((prev) => prev.filter((item) => item.id !== targetId));
-    setIsDeleteModalOpen(false);
-    setDeleteTargetId(null);
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/api/presensi/${targetId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (error) {
-      console.error("Gagal menghapus presensi:", error);
-      setDaftarPresensi(dataSebelumnya);
-      alert("Terjadi kesalahan saat menghapus data.");
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "hadir":
-        return "bg-green-100 text-green-800";
-      case "izin":
-        return "bg-yellow-100 text-yellow-800";
-      case "alpha":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const formatStatusText = (status: string) => {
-    switch (status) {
-      case "hadir":
-        return "Hadir";
-      case "izin":
-        return "Izin";
-      case "alpha":
-        return "Alpha";
-      default:
-        return status;
-    }
-  };
-
-  const formatTanggal = (tanggal: string | null) => {
-    if (!tanggal) return "-";
-    const options: Intl.DateTimeFormatOptions = {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+    const payload = {
+      ...formData,
+      kementerian: formData.tingkatan === "Kementerian" ? formData.kementerian : null,
     };
-    return new Date(tanggal).toLocaleDateString("id-ID", options);
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/sesi-presensi", payload, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        setMessage(`✅ Sesi berhasil dibuat! Kode: ${response.data.kode_presensi}`);
+        
+        setFormData({ 
+          nama_kegiatan: "", 
+          tingkatan: "Komunal", 
+          kementerian: "", 
+          tanggal: "", 
+          waktu_mulai: "", 
+          batas_waktu: "" 
+        });
+        fetchSesiPresensi();
+        
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setMessage("");
+        }, 2000);
+      }
+    } catch (error: any) {
+      setMessage(`❌ Gagal: ${error.response?.data?.message || "Terjadi kesalahan sistem."}`);
+    } finally {
+      setIsFormLoading(false);
+    }
   };
 
-  const daftarTerfilter = daftarPresensi.filter((item) => {
-    const cocokKegiatan = filterKegiatan
-      ? item.kegiatan.toLowerCase().includes(filterKegiatan.toLowerCase())
-      : true;
-    const cocokStatus = filterStatus ? item.status === filterStatus : true;
-    return cocokKegiatan && cocokStatus;
-  });
+  const openModal = () => {
+    setMessage("");
+    setFormData({ 
+      nama_kegiatan: "", 
+      tingkatan: "Komunal", 
+      kementerian: "", 
+      tanggal: "", 
+      waktu_mulai: "", 
+      batas_waktu: "" 
+    });
+    setIsModalOpen(true);
+  };
 
-  const totalHadir = daftarTerfilter.filter((i) => i.status === "hadir").length;
-  const totalIzin = daftarTerfilter.filter((i) => i.status === "izin").length;
-  const totalAlpha = daftarTerfilter.filter((i) => i.status === "alpha").length;
+  // --- STYLING KHUSUS FORM (Modern & Clean) ---
+  const inputWrapper = "relative flex items-center";
+  const iconStyle = "absolute left-3.5 text-gray-400 pointer-events-none w-5 h-5";
+  // Menghilangkan outline bawaan dan menggantinya dengan ring kustom Tailwind
+  const inputClass = "w-full pl-11 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 transition-all duration-200 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 hover:border-gray-300 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-50 hover:[&::-webkit-calendar-picker-indicator]:opacity-100";
+  // Khusus Select agar panah bawaannya hilang dan diganti ikon kustom
+  const selectClass = `${inputClass} appearance-none pr-10`;
 
   return (
-    <div className="space-y-6 relative">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="p-8 font-sans text-gray-800">
+      
+      {/* ================= HEADER ================= */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Manajemen Presensi
-          </h1>
-          <p className="text-gray-500 text-sm md:text-base mt-1">
-            Catat dan pantau kehadiran anggota pada setiap kegiatan.
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Manajemen Presensi</h1>
+          <p className="text-gray-500 text-sm mt-1 font-medium">Kelola pembuatan sesi presensi dan bagikan kode unik ke anggota.</p>
         </div>
-        <button
-          onClick={handleAddClick}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm font-medium w-full sm:w-auto"
+        
+        <button 
+          onClick={openModal}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm shadow-blue-500/20 transition-all active:scale-95 flex items-center gap-2 text-sm"
         >
-          + Tambah Presensi
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Buat Presensi
         </button>
       </div>
 
-      {/* Ringkasan */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-green-700">{totalHadir}</p>
-          <p className="text-sm text-green-600 mt-1">Hadir</p>
-        </div>
-        <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-yellow-700">{totalIzin}</p>
-          <p className="text-sm text-yellow-600 mt-1">Izin</p>
-        </div>
-        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-red-700">{totalAlpha}</p>
-          <p className="text-sm text-red-600 mt-1">Alpha</p>
-        </div>
-      </div>
-
-      {/* Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="text"
-          placeholder="Cari nama kegiatan..."
-          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-          value={filterKegiatan}
-          onChange={(e) => setFilterKegiatan(e.target.value)}
-        />
-        <select
-          className="sm:w-48 p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="">Semua Status</option>
-          <option value="hadir">Hadir</option>
-          <option value="izin">Izin</option>
-          <option value="alpha">Alpha</option>
-        </select>
-      </div>
-
-      {/* Tabel */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* ================= TABEL SESI PRESENSI ================= */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="p-4 text-sm font-semibold text-gray-600">No.</th>
-                <th className="p-4 text-sm font-semibold text-gray-600">
-                  Nama Anggota
-                </th>
-                <th className="p-4 text-sm font-semibold text-gray-600">
-                  Divisi
-                </th>
-                <th className="p-4 text-sm font-semibold text-gray-600">
-                  Kegiatan
-                </th>
-                <th className="p-4 text-sm font-semibold text-gray-600">
-                  Tanggal
-                </th>
-                <th className="p-4 text-sm font-semibold text-gray-600">
-                  Status
-                </th>
-                <th className="p-4 text-sm font-semibold text-gray-600 text-center">
-                  Aksi
-                </th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-gray-100 text-gray-500 text-sm bg-gray-50/50">
+                <th className="p-4 font-semibold w-16 text-center">No.</th>
+                <th className="p-4 font-semibold">Nama Kegiatan</th>
+                <th className="p-4 font-semibold">Tingkatan</th>
+                <th className="p-4 font-semibold">Jadwal (WIB)</th>
+                <th className="p-4 font-semibold text-center">Kode Presensi</th>
+                <th className="p-4 font-semibold text-center">Status</th>
+                <th className="p-4 font-semibold text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody>
-              {isFetching ? (
+            <tbody className="divide-y divide-gray-50">
+              {isPageLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-500">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <p>Memuat data presensi...</p>
-                    </div>
-                  </td>
+                  <td colSpan={7} className="p-8 text-center text-gray-400 font-medium">Memuat data sesi...</td>
                 </tr>
-              ) : daftarTerfilter.length > 0 ? (
-                daftarTerfilter.map((presensi, i) => (
-                  <tr
-                    key={presensi.id}
-                    className="border-b border-gray-50 hover:bg-gray-50"
-                  >
-                    <td className="p-4 text-sm text-gray-700 font-medium">
-                      {i + 1}
+              ) : daftarSesi.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-gray-500 font-medium">Belum ada sesi presensi yang dibuat.</td>
+                </tr>
+              ) : (
+                daftarSesi.map((sesi, index) => (
+                  <tr key={sesi.id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="p-4 text-gray-500 text-center text-sm font-medium">{index + 1}</td>
+                    <td className="p-4 text-gray-800 font-semibold text-sm">{sesi.nama_kegiatan}</td>
+                    <td className="p-4 text-gray-600 text-sm font-medium">
+                      {sesi.tingkatan} {sesi.kementerian ? `(${sesi.kementerian})` : ""}
                     </td>
-                    <td className="p-4 text-sm text-gray-800">
-                      {presensi.nama_anggota}
+                    
+                    <td className="p-4 text-sm">
+                      <div className="text-gray-800 font-semibold mb-1">{sesi.tanggal}</div>
+                      <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded-md text-xs font-bold text-gray-600 border border-gray-200/60">
+                        <span className="text-blue-600">{sesi.waktu_mulai}</span> 
+                        <span className="text-gray-400">-</span> 
+                        <span className="text-red-500">{sesi.batas_waktu}</span>
+                      </div>
                     </td>
-                    <td className="p-4 text-sm text-gray-600">
-                      {presensi.divisi}
+                    
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={`font-mono font-bold tracking-widest px-3 py-1 bg-gray-100 border border-gray-200/60 rounded-lg text-sm transition-all ${visibleCodes[sesi.id] ? "text-gray-800" : "text-transparent bg-gray-200/50 select-none"}`}>
+                          {visibleCodes[sesi.id] ? sesi.kode_presensi : "••••••"}
+                        </span>
+                        <button 
+                          onClick={() => toggleCodeVisibility(sesi.id)}
+                          className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-blue-50"
+                          title="Lihat Kode"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
-                    <td className="p-4 text-sm text-gray-600">
-                      {presensi.kegiatan}
-                    </td>
-                    <td className="p-4 text-sm text-gray-600">
-                      {formatTanggal(presensi.tanggal)}
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(presensi.status)}`}
-                      >
-                        {formatStatusText(presensi.status)}
+
+                    <td className="p-4 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${sesi.is_active ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                        {sesi.is_active ? "Aktif" : "Ditutup"}
                       </span>
                     </td>
-                    <td className="p-4 flex justify-center gap-2">
-                      {presensi.status === "alpha" && (
-                        <button
-                          onClick={() => handleStatusChange(presensi, "izin")}
-                          className="text-yellow-700 bg-yellow-100 hover:bg-yellow-200 text-xs font-bold px-2 py-1 rounded-md transition"
-                          title="Ubah ke Izin"
-                        >
-                          IZIN
-                        </button>
-                      )}
-                      {presensi.status !== "hadir" && (
-                        <button
-                          onClick={() => handleStatusChange(presensi, "hadir")}
-                          className="text-green-700 bg-green-100 hover:bg-green-200 text-xs font-bold px-2 py-1 rounded-md transition"
-                          title="Tandai Hadir"
-                        >
-                          HADIR
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleEditClick(presensi)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(presensi.id)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition"
-                      >
-                        Hapus
+                    <td className="p-4 text-center">
+                      <button className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition-colors">
+                        Detail
                       </button>
                     </td>
                   </tr>
                 ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="p-4 text-center text-gray-500">
-                    {filterKegiatan || filterStatus
-                      ? "Tidak ada data yang cocok dengan filter."
-                      : "Belum ada data presensi."}
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* MODAL TAMBAH / EDIT */}
+      {/* ================= MODAL BUAT SESI PRESENSI ================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-[95%] sm:w-full max-w-md p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">
-              {isEditMode ? "Edit Presensi" : "Tambah Presensi"}
-            </h2>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-all">
+          <div className="bg-white p-6 sm:p-8 rounded-[24px] shadow-2xl w-full max-w-md relative animate-in zoom-in-95 duration-200">
+            
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-5 right-5 text-gray-400 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 border border-transparent hover:border-gray-200 rounded-full p-2 transition-all"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            <div className="mb-6 pr-8">
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Buat Sesi Baru</h2>
+              <p className="text-gray-500 text-sm mt-1 font-medium">Sistem akan men-generate kode unik presensi.</p>
+            </div>
+
+            {message && (
+              <div className={`p-4 mb-5 rounded-xl text-sm font-bold border ${message.includes("✅") ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}>
+                {message}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Input Nama Kegiatan */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nama Anggota <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.nama_anggota}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nama_anggota: e.target.value })
-                  }
-                />
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Nama Kegiatan</label>
+                <div className={inputWrapper}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={iconStyle}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  <input
+                    type="text" name="nama_kegiatan" value={formData.nama_kegiatan} onChange={handleChange} required
+                    className={inputClass} placeholder="Contoh: Rapat Koordinasi"
+                  />
+                </div>
               </div>
 
+              {/* Input Tanggal */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Kementerian <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.divisi}
-                  onChange={(e) =>
-                    setFormData({ ...formData, divisi: e.target.value })
-                  }
-                >
-                  <option value="" disabled>-- Pilih Kementerian --</option>
-                  <option value="Kastrat">Kastrat</option>
-                  <option value="Risil">Risil</option>
-                  <option value="Kominfo">Kominfo</option>
-                  <option value="Sosmas">Sosmas</option>
-                  <option value="PSDM">PSDM</option>
-                  <option value="Dagri">Dagri</option>
-                  <option value="Ekraf">Ekraf</option>
-                  <option value="Advokesma">Advokesma</option>
-                </select>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Tanggal Kegiatan</label>
+                <div className={inputWrapper}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={iconStyle}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                  <input
+                    type="date" name="tanggal" value={formData.tanggal} onChange={handleChange} required
+                    className={inputClass}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nama Kegiatan <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.kegiatan}
-                  onChange={(e) =>
-                    setFormData({ ...formData, kegiatan: e.target.value })
-                  }
-                />
+              {/* Waktu Mulai & Akhir */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Waktu Mulai</label>
+                  <div className={inputWrapper}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={iconStyle}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <input
+                      type="time" name="waktu_mulai" value={formData.waktu_mulai} onChange={handleChange} required
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+                <div className="pt-6 text-gray-400 font-bold px-1">-</div>
+                <div className="flex-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Batas Akhir</label>
+                  <div className={inputWrapper}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={iconStyle}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <input
+                      type="time" name="batas_waktu" value={formData.batas_waktu} onChange={handleChange} required
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
               </div>
 
+              {/* Input Tingkatan */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tanggal <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.tanggal}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tanggal: e.target.value })
-                  }
-                />
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Tingkatan</label>
+                <div className={inputWrapper}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={iconStyle}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                  </svg>
+                  <select name="tingkatan" value={formData.tingkatan} onChange={handleChange} required className={selectClass}>
+                    <option value="Komunal">Komunal (Seluruh Anggota)</option>
+                    <option value="BPH">BPH (Badan Pengurus Harian)</option>
+                    <option value="Kementerian">Kementerian Spesifik</option>
+                  </select>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="absolute right-3.5 w-4 h-4 text-gray-400 pointer-events-none">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status Kehadiran <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                >
-                  <option value="hadir">Hadir</option>
-                  <option value="izin">Izin</option>
-                  <option value="alpha">Alpha</option>
-                </select>
-              </div>
+              {/* Input Kementerian */}
+              {formData.tingkatan === "Kementerian" && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Pilih Kementerian</label>
+                  <div className={inputWrapper}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={iconStyle}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                    </svg>
+                    <select name="kementerian" value={formData.kementerian} onChange={handleChange} required className={selectClass}>
+                      <option value="" disabled>-- Pilih --</option>
+                      <option value="Kastrat">Kastrat</option>
+                      <option value="Risil">Risil</option>
+                      <option value="Kominfo">Kominfo</option>
+                      <option value="Sosmas">Sosmas</option>
+                      <option value="PSDM">PSDM</option>
+                      <option value="Dagri">Dagri</option>
+                      <option value="Ekraf">Ekraf</option>
+                      <option value="Advokesma">Advokesma</option>
+                    </select>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="absolute right-3.5 w-4 h-4 text-gray-400 pointer-events-none">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </div>
+                </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Keterangan
-                </label>
-                <textarea
-                  rows={2}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-base sm:text-sm"
-                  placeholder="Opsional — isi alasan izin atau catatan lainnya"
-                  value={formData.keterangan}
-                  onChange={(e) =>
-                    setFormData({ ...formData, keterangan: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-sm sm:text-base"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-sm sm:text-base disabled:bg-blue-300"
-                >
-                  {isLoading ? "Menyimpan..." : "Simpan"}
-                </button>
-              </div>
+              <button
+                type="submit" disabled={isFormLoading}
+                className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm transition-all shadow-sm ${
+                  isFormLoading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 active:scale-[0.98]"
+                }`}
+              >
+                {isFormLoading ? "Memproses..." : "Generate Kode Presensi"}
+              </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL KONFIRMASI HAPUS */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-[95%] sm:w-full max-w-sm p-5 sm:p-6 text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-              <svg
-                className="h-6 w-6 text-red-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              Hapus Data Presensi?
-            </h3>
-            <p className="text-sm text-gray-500 mb-6">
-              Apakah kamu yakin ingin menghapus data presensi ini? Data yang
-              sudah dihapus tidak dapat dikembalikan.
-            </p>
-
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => {
-                  setIsDeleteModalOpen(false);
-                  setDeleteTargetId(null);
-                }}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium w-full text-sm sm:text-base"
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium w-full flex justify-center items-center text-sm sm:text-base"
-              >
-                Ya, Hapus
-              </button>
-            </div>
           </div>
         </div>
       )}
     </div>
   );
-};
-
-export default Presensi;
+}
