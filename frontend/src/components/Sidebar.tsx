@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logoKarsacipta from "../assets/logo-karsacipta.jpeg";
 
 interface SidebarProps {
   activeMenu: string;
@@ -55,9 +56,19 @@ export default function Sidebar({ activeMenu, setActiveMenu, isMobileOpen, setIs
             </svg>
           </button>
 
-          <h1 className={`text-2xl font-extrabold text-orange-500 transition-all duration-300 overflow-hidden whitespace-nowrap ${isOpen ? "opacity-100 w-auto md:ml-1" : "opacity-0 w-0"}`}>
-            SIBEM
-          </h1>
+          <div className="flex items-center gap-2 overflow-hidden">
+            {/* Bagian Foto Logo */}
+            <img 
+              src={logoKarsacipta} 
+              alt="Logo SIBEM" 
+              className={`object-contain transition-all duration-300 ${isOpen ? "h-8 w-8 opacity-100" : "h-0 w-0 opacity-0"}`}
+            />
+
+            {/* Bagian Teks SIBEM yang sudah ada */}
+            <h1 className={`text-2xl font-extrabold text-orange-500 transition-all duration-300 overflow-hidden whitespace-nowrap ${isOpen ? "opacity-100 w-auto md:ml-1" : "opacity-0 w-0"}`}>
+              SIBEM
+            </h1>
+          </div>
 
           {/* Tombol Tutup (X) khusus HP */}
           <button 

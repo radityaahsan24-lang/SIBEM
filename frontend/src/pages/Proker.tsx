@@ -201,7 +201,7 @@ const Proker = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
-            Manaje  men Program Kerja
+            Manajemen Program Kerja
           </h1>
           <p className="text-gray-500 text-sm md:text-base mt-1">
             Kelola pengajuan dan pelaksanaan proker himpunan.
