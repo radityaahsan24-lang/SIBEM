@@ -6,6 +6,7 @@ import Presensi from "./pages/Presensi";
 import Login from "./pages/Login";
 import Laporan from "./pages/Laporan";
 import AdminDashboard from "./pages/AdminDashboard";
+import Kementerian from "./pages/Kementerian";
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState("Overview"); // Default menu sesuai desain
@@ -20,6 +21,8 @@ export default function App() {
         return <Laporan />;
       case "Presensi":
         return <Presensi />;
+      case "Kementerian":
+        return <Kementerian />;
       default:
         return (
           <div className="bg-white p-10 rounded-[40px] shadow-sm flex items-center justify-center h-96 border border-gray-100">
