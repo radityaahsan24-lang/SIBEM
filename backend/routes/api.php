@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProkerController;
+use App\Http\Controllers\SesiPresensiController;
+use App\Http\Controllers\KehadiranController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -13,11 +15,22 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    // Route Manajemen Presensi
+    Route::get('/sesi-presensi', [SesiPresensiController::class, 'index']);
+    Route::post('/sesi-presensi', [SesiPresensiController::class, 'store']);
+    Route::put('/sesi-presensi/{id}', [SesiPresensiController::class, 'update']);
+    Route::delete('/sesi-presensi/{id}', [SesiPresensiController::class, 'destroy']);
+
     // Rute untuk mengelola Program Kerja
     Route::get('/proker', [ProkerController::class, 'index']);
     Route::post('/proker', [ProkerController::class, 'store']);
     Route::put('/proker/{id}', [ProkerController::class, 'update']);
     Route::delete('/proker/{id}', [ProkerController::class, 'destroy']);
+
+    Route::get('/sesi-presensi/{id}/peserta', [KehadiranController::class, 'getPeserta']);
+    Route::post('/sesi-presensi/{id}/peserta', [KehadiranController::class, 'simpanKehadiran']);
+
+    Route::post('/sesi-presensi/{id}/hadir', [KehadiranController::class, 'submitKode']);
 
     // Rute untuk Admin menambah akun pengurus baru
     Route::post('/users', [AuthController::class, 'createUser']);
