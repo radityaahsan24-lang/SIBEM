@@ -27,14 +27,12 @@ export default function Presensi() {
   const [daftarSesi, setDaftarSesi] = useState<SesiPresensi[]>([]);
   const [isPageLoading, setIsPageLoading] = useState(true);
   
-  // State Mode Tampilan & Riwayat Detail
   const [viewMode, setViewMode] = useState<"aktif" | "riwayat">("aktif");
   const [selectedHistorySesi, setSelectedHistorySesi] = useState<SesiPresensi | null>(null);
 
-  // Modals State
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isActionModalOpen, setIsActionModalOpen] = useState(false); // Untuk Daftar Hadir (Aktif)
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false); 
   const [isInputModalOpen, setIsInputModalOpen] = useState(false);   
   
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -130,7 +128,7 @@ export default function Presensi() {
       await axios.delete(`http://127.0.0.1:8000/api/sesi-presensi/${selectedSesi.id}`, { headers: { Authorization: `Bearer ${getToken()}` }});
       fetchSesiPresensi();
       setIsDeleteModalOpen(false);
-      setSelectedHistorySesi(null); // Tutup detail jika dihapus
+      setSelectedHistorySesi(null); 
     } catch (error) {
       alert("Gagal menghapus sesi presensi.");
     } finally {
@@ -191,7 +189,7 @@ export default function Presensi() {
     }
   };
 
-  // Fungsi khusus buka History Page View
+  // ================= UPDATE: BUKA PAGE RIWAYAT =================
   const openHistoryDetail = async (sesi: SesiPresensi) => {
     setSelectedHistorySesi(sesi);
     setIsLoadingPeserta(true);
@@ -199,7 +197,14 @@ export default function Presensi() {
       const res = await axios.get(`http://127.0.0.1:8000/api/sesi-presensi/${sesi.id}/peserta`, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      setDaftarPeserta(res.data.data);
+      
+      // Filter Paksa: Jika rapat sudah jadi riwayat, ubah semua "Belum Presensi" menjadi "Tidak Hadir"
+      const formattedData = res.data.data.map((p: PesertaSesi) => ({
+        ...p,
+        status: (p.status === 'Belum Presensi' || p.status === 'Alpa') ? 'Tidak Hadir' : p.status
+      }));
+
+      setDaftarPeserta(formattedData);
     } catch (error) {
       console.error("Gagal mengambil history peserta:", error);
     } finally {
@@ -207,33 +212,21 @@ export default function Presensi() {
     }
   };
 
-  const simpanKehadiran = async () => {
+  // AUTO-SAVE REALTIME
+  const handleStatusChange = async (userId: number, status: string) => {
     if (!selectedSesi) return;
-    setIsFormLoading(true);
-    setMessage("");
-    
-    const payload = {
-      kehadiran: Object.keys(statusHadir).map(userId => ({
-        user_id: parseInt(userId),
-        status: statusHadir[parseInt(userId)]
-      }))
-    };
+
+    setStatusHadir(prev => ({ ...prev, [userId]: status }));
 
     try {
-      await axios.post(`http://127.0.0.1:8000/api/sesi-presensi/${selectedSesi.id}/peserta`, payload, {
+      await axios.post(`http://127.0.0.1:8000/api/sesi-presensi/${selectedSesi.id}/peserta`, {
+        kehadiran: [{ user_id: userId, status: status }]
+      }, {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` }
       });
-      setMessage("✅ Daftar hadir berhasil disimpan!");
-      setTimeout(() => { setIsActionModalOpen(false); setMessage(""); }, 1500);
-    } catch (error: any) {
-      setMessage("❌ Gagal menyimpan daftar hadir.");
-    } finally {
-      setIsFormLoading(false);
+    } catch (error) {
+      console.error("Gagal auto-save status anggota");
     }
-  };
-
-  const handleStatusChange = (userId: number, status: string) => {
-    setStatusHadir(prev => ({ ...prev, [userId]: status }));
   };
 
   const inputWrapper = "relative flex items-center";
@@ -259,7 +252,7 @@ export default function Presensi() {
             <button 
               onClick={() => {
                 setViewMode(viewMode === "aktif" ? "riwayat" : "aktif");
-                setSelectedHistorySesi(null); // Reset page detail saat switch mode
+                setSelectedHistorySesi(null); 
               }} 
               className="flex-1 sm:flex-none bg-white text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg font-bold border border-gray-200 transition-all text-sm flex items-center justify-center gap-2 whitespace-nowrap"
             >
@@ -298,7 +291,6 @@ export default function Presensi() {
               <p className="text-gray-500 font-medium text-sm mt-1">{selectedHistorySesi.tanggal} | {selectedHistorySesi.waktu_mulai.substring(0, 5)} - {selectedHistorySesi.batas_waktu.substring(0, 5)} WIB</p>
             </div>
             
-            {/* Tombol Delete di Detail Riwayat */}
             {isBPH && (
               <button onClick={() => { setSelectedSesi(selectedHistorySesi); setIsDeleteModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
@@ -321,16 +313,14 @@ export default function Presensi() {
                   </div>
                   
                   <div className="flex items-center flex-wrap gap-3">
-                    {/* Badge Status */}
                     <span className={`px-4 py-1.5 rounded-lg text-xs font-bold border tracking-wide ${
                       peserta.status === 'Hadir' ? 'bg-green-100 text-green-700 border-green-300' :
                       peserta.status === 'Izin' ? 'bg-blue-100 text-blue-700 border-blue-300' :
-                      'bg-red-100 text-red-700 border-red-300'
+                      'bg-red-100 text-red-700 border-red-300' // Untuk "Tidak Hadir"
                     }`}>
                       {peserta.status}
                     </span>
 
-                    {/* Tombol Link Surat Izin */}
                     {peserta.status === 'Izin' && peserta.bukti_izin && (
                       <a 
                         href={peserta.bukti_izin} 
@@ -418,7 +408,6 @@ export default function Presensi() {
                     )}
                   </div>
 
-                  {/* TOMBOL ACTIONS (Edit/Hapus/Daftar Hadir/Isi Presensi) */}
                   <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
                     {isBPH ? (
                       <div className="flex gap-2">
@@ -505,11 +494,7 @@ export default function Presensi() {
                 </div>
               )}
 
-              <button 
-                type="submit" 
-                disabled={isFormLoading || (inputStatus === "Hadir" && inputKode.length < 6) || (inputStatus === "Izin" && inputLinkIzin.length < 5)} 
-                className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all shadow-sm bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 active:scale-[0.98] disabled:bg-blue-400 disabled:cursor-not-allowed disabled:shadow-none"
-              >
+              <button type="submit" disabled={isFormLoading || (inputStatus === "Hadir" && inputKode.length < 6) || (inputStatus === "Izin" && inputLinkIzin.length < 5)} className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all shadow-sm bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 active:scale-[0.98] disabled:bg-blue-400 disabled:cursor-not-allowed disabled:shadow-none">
                 {isFormLoading ? "Memproses..." : "Kirim Presensi"}
               </button>
             </form>
@@ -524,13 +509,11 @@ export default function Presensi() {
             <button onClick={() => setIsActionModalOpen(false)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors">✕</button>
 
             <div className="mb-6">
-              <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-1.5">Daftar Kehadiran Saat Ini</h2>
+              <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-1.5">Daftar Kehadiran Berlangsung</h2>
               <h1 className="text-2xl font-extrabold text-gray-900">{selectedSesi.nama_kegiatan}</h1>
             </div>
 
-            {message && <div className={`p-4 mb-5 rounded-xl text-sm font-bold border ${message.includes("✅") ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}`}>{message}</div>}
-
-            <div className="overflow-y-auto flex-1 mb-6 border border-gray-100 rounded-2xl p-2 bg-gray-50">
+            <div className="overflow-y-auto flex-1 border border-gray-100 rounded-2xl p-2 bg-gray-50">
               {isLoadingPeserta ? (
                 <div className="text-center py-12 text-gray-400 font-medium">Memuat anggota...</div>
               ) : daftarPeserta.length === 0 ? (
@@ -564,7 +547,6 @@ export default function Presensi() {
                             )
                           })}
                         </div>
-                        {/* Jika admin merubah ke Izin padahal aslinya tidak punya link, link tidak akan muncul disini (Admin rekap manual). Namun jika data Izin berasal dari user yang menginput link, link akan muncul. */}
                         {peserta.status === 'Izin' && peserta.bukti_izin && (
                           <a href={peserta.bukti_izin} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-blue-500 hover:text-blue-700 underline flex items-center gap-1">
                             Buka Bukti Izin <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
@@ -576,10 +558,6 @@ export default function Presensi() {
                 </div>
               )}
             </div>
-
-            <button onClick={simpanKehadiran} disabled={isFormLoading || isLoadingPeserta} className="w-full py-4 rounded-xl text-white font-bold text-sm transition-all shadow-sm bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 active:scale-[0.98] disabled:bg-blue-400 disabled:cursor-not-allowed">
-              {isFormLoading ? "Menyimpan Data..." : "Simpan Daftar Hadir"}
-            </button>
           </div>
         </div>
       )}
