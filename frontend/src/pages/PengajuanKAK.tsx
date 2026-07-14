@@ -42,10 +42,24 @@ const PengajuanKAK = () => {
   });
 
   useEffect(() => {
-    fetchKAK();
+    const loadData = async () => {
+      setIsFetching(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://127.0.0.1:8000/api/kak", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setDaftarKAK(response.data);
+      } catch (error) {
+        console.error("Gagal mengambil data KAK:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    loadData();
   }, []);
 
-  const fetchKAK = async (silent = false) => {
+  async function fetchKAK(silent = false) {
     if (!silent) setIsFetching(true);
     try {
       const token = localStorage.getItem("token");
@@ -58,7 +72,7 @@ const PengajuanKAK = () => {
     } finally {
       if (!silent) setIsFetching(false);
     }
-  };
+  }
 
   const handleAddClick = () => {
     setFormData({
