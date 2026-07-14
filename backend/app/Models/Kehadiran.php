@@ -15,7 +15,8 @@ class Kehadiran extends Model
         'sesi_presensi_id',
         'user_id',
         'status',
-        'waktu_presensi'
+        'waktu_presensi',
+        'bukti_izin'
     ];
 
     // Relasi balik ke tabel SesiPresensi (1 Kehadiran milik 1 Sesi)
