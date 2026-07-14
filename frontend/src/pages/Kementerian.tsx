@@ -33,83 +33,82 @@ export default function Kementerian() {
   const [selectedKementerian, setSelectedKementerian] = useState<KementerianData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchStatistik = async () => {
-    setIsLoadingStats(true);
-    try {
-      const token = localStorage.getItem("token");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const usersRes = await axios.get("http://127.0.0.1:8000/api/users", { headers });
-      const users: User[] = usersRes.data.data || usersRes.data || [];
-
-      const kegiatanRes = await axios.get("http://127.0.0.1:8000/api/proker", { headers }).catch(() => ({ data: [] }));
-      const kegiatan = kegiatanRes.data.data || kegiatanRes.data || [];
-
-      const excludedRoles = [
-        "admin", 
-        "presiden bem", 
-        "wakil presiden bem", 
-        "bendahara", "bendahara 1", "bendahara 2", 
-        "sekretaris", "sekretaris 1", "sekretaris 2"
-      ];
-
-      const staffTerdaftar = users.filter((u) => u.role?.toLowerCase() !== "admin");
-
-      const kementerianMap = new Map<string, User[]>();
-
-      staffTerdaftar.forEach(user => {
-        const role = user.role?.trim() || "";
-        const roleLower = role.toLowerCase();
-
-        if (excludedRoles.includes(roleLower) || !roleLower) return;
-
-        let namaKementerian = role.replace(/^(Menteri|Sekjen|Staff)\s+/i, '').trim();
-        if (!namaKementerian) namaKementerian = role;
-
-        if (!kementerianMap.has(namaKementerian)) {
-          kementerianMap.set(namaKementerian, []);
-        }
-        kementerianMap.get(namaKementerian)!.push(user);
-      });
-
-      const dynamicKementerian: KementerianData[] = Array.from(kementerianMap.entries()).map(([namaKementerian, usersInDivisi]) => {
-        const menteriObj = usersInDivisi.find((u) => u.role?.toLowerCase().startsWith("menteri")) || null;
-        const anggotaList = usersInDivisi.filter((u) => !u.role?.toLowerCase().startsWith("menteri"));
-
-        const prokerDivisi = kegiatan.filter((k: any) => 
-          k.divisi?.toLowerCase() === namaKementerian.toLowerCase() || 
-          k.kementerian?.toLowerCase() === namaKementerian.toLowerCase()
-        );
-
-        return {
-          id: namaKementerian,
-          nama: namaKementerian,
-          menteri: menteriObj ? menteriObj.name : "Belum ada Menteri",
-          menteriObj: menteriObj,
-          anggota: anggotaList,
-          staffCount: usersInDivisi.length,
-          prokerCount: prokerDivisi.length,
-          anggaran: "Rp -", 
-          status: "Aktif",
-        };
-      });
-
-      setStats({
-        totalKementerian: dynamicKementerian.length,
-        totalStaff: staffTerdaftar.length,
-        totalProker: kegiatan.length,
-      });
-
-      setKementerianList(dynamicKementerian.sort((a, b) => b.staffCount - a.staffCount));
-
-    } catch (error) {
-      console.error("Gagal mengambil data statistik:", error);
-    } finally {
-      setIsLoadingStats(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchStatistik = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const usersRes = await axios.get("http://127.0.0.1:8000/api/users", { headers });
+        const users: User[] = usersRes.data.data || usersRes.data || [];
+
+        const kegiatanRes = await axios.get("http://127.0.0.1:8000/api/proker", { headers }).catch(() => ({ data: [] }));
+        const kegiatan = kegiatanRes.data.data || kegiatanRes.data || [];
+
+        const excludedRoles = [
+          "admin", 
+          "presiden bem", 
+          "wakil presiden bem", 
+          "bendahara", "bendahara 1", "bendahara 2", 
+          "sekretaris", "sekretaris 1", "sekretaris 2"
+        ];
+
+        const staffTerdaftar = users.filter((u) => u.role?.toLowerCase() !== "admin");
+
+        const kementerianMap = new Map<string, User[]>();
+
+        staffTerdaftar.forEach(user => {
+          const role = user.role?.trim() || "";
+          const roleLower = role.toLowerCase();
+
+          if (excludedRoles.includes(roleLower) || !roleLower) return;
+
+          let namaKementerian = role.replace(/^(Menteri|Sekjen|Staff)\s+/i, '').trim();
+          if (!namaKementerian) namaKementerian = role;
+
+          if (!kementerianMap.has(namaKementerian)) {
+            kementerianMap.set(namaKementerian, []);
+          }
+          kementerianMap.get(namaKementerian)!.push(user);
+        });
+
+        const dynamicKementerian: KementerianData[] = Array.from(kementerianMap.entries()).map(([namaKementerian, usersInDivisi]) => {
+          const menteriObj = usersInDivisi.find((u) => u.role?.toLowerCase().startsWith("menteri")) || null;
+          const anggotaList = usersInDivisi.filter((u) => !u.role?.toLowerCase().startsWith("menteri"));
+
+          const prokerDivisi = kegiatan.filter((k: { divisi?: string; kementerian?: string }) => 
+            k.divisi?.toLowerCase() === namaKementerian.toLowerCase() || 
+            k.kementerian?.toLowerCase() === namaKementerian.toLowerCase()
+          );
+
+          return {
+            id: namaKementerian,
+            nama: namaKementerian,
+            menteri: menteriObj ? menteriObj.name : "Belum ada Menteri",
+            menteriObj: menteriObj,
+            anggota: anggotaList,
+            staffCount: usersInDivisi.length,
+            prokerCount: prokerDivisi.length,
+            anggaran: "Rp -", 
+            status: "Aktif",
+          };
+        });
+
+        setStats({
+          totalKementerian: dynamicKementerian.length,
+          totalStaff: staffTerdaftar.length,
+          totalProker: kegiatan.length,
+        });
+
+        setKementerianList(dynamicKementerian.sort((a, b) => b.staffCount - a.staffCount));
+
+      } catch (error) {
+        console.error("Gagal mengambil data statistik:", error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
     fetchStatistik();
   }, []);
 
@@ -267,7 +266,7 @@ export default function Kementerian() {
               <div>
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Menteri Kementerian</h3>
                 {selectedKementerian.menteriObj ? (
-                  <div className="flex items-center gap-4 bg-gradient-to-r from-blue-50 to-white border border-blue-100 p-4 rounded-2xl">
+                  <div className="flex items-center gap-4 bg-linear-to-r from-blue-50 to-white border border-blue-100 p-4 rounded-2xl">
                     <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-inner shrink-0">
                       {selectedKementerian.menteriObj.name.charAt(0).toUpperCase()}
                     </div>
