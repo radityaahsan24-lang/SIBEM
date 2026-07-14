@@ -1,21 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 // Menerima perintah onMenuClick dari MainLayout
 interface NavbarProps {
   onMenuClick?: () => void;
 }
 
+interface UserData {
+  name: string;
+  role: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
+  const [user] = useState<UserData | null>(() => {
     const userData = localStorage.getItem("user");
-
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+    return userData ? JSON.parse(userData) : null;
+  });
 
   const handleLogout = () => {
   localStorage.removeItem("token");
@@ -48,10 +50,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
       {/* Bagian Kanan: Ikon & Profil */}
       <div className="flex items-center gap-3 md:gap-5">
-        <button className="hidden md:block text-gray-300 hover:text-gray-500 text-xl">✉️</button>
-        <button className="text-orange-400 hover:text-orange-500 text-xl relative">
-          🔔
-          <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+        <button className="hidden md:block text-gray-400 hover:text-gray-500 transition-colors">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+        </button>
+        <button className="text-orange-400 hover:text-orange-500 transition-colors relative">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
 
         {/* Profil BEM */}

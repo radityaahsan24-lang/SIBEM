@@ -27,6 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/proker/{id}', [ProkerController::class, 'update']);
     Route::delete('/proker/{id}', [ProkerController::class, 'destroy']);
 
+    // Rute untuk mengelola Anggaran
+    Route::get('/anggaran', [\App\Http\Controllers\AnggaranController::class, 'index']);
+    Route::post('/anggaran', [\App\Http\Controllers\AnggaranController::class, 'store']);
+    Route::put('/anggaran/{id}', [\App\Http\Controllers\AnggaranController::class, 'update']);
+    Route::delete('/anggaran/{id}', [\App\Http\Controllers\AnggaranController::class, 'destroy']);
+
     Route::get('/sesi-presensi/{id}/peserta', [KehadiranController::class, 'getPeserta']);
     Route::post('/sesi-presensi/{id}/peserta', [KehadiranController::class, 'simpanKehadiran']);
 

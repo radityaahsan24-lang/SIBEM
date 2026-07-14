@@ -8,6 +8,7 @@ import Laporan from "./pages/Laporan";
 import AdminDashboard from "./pages/AdminDashboard";
 import Kementerian from "./pages/Kementerian";
 import PengajuanKAK from "./pages/PengajuanKAK";
+import Anggaran from "./pages/Anggaran";
 
 export default function App() {
   const [activeMenu, setActiveMenu] = useState("Overview"); // Default menu sesuai desain
@@ -20,6 +21,8 @@ export default function App() {
         return <Proker />;
       case "Pengajuan KAK":
         return <PengajuanKAK />;
+      case "Anggaran":
+        return <Anggaran />;
       case "Laporan":
         return <Laporan />;
       case "Presensi":
