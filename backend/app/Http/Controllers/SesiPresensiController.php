@@ -11,8 +11,16 @@ class SesiPresensiController extends Controller
     // Method untuk mengambil daftar sesi presensi
     public function index()
     {
-        // Ambil data dan urutkan dari yang paling baru dibuat
-        $sesi = SesiPresensi::orderBy('created_at', 'desc')->get();
+        $userId = auth()->id();
+        
+        // Ambil data dan tambahkan flag (penanda) apakah user ini sudah absen
+        $sesi = SesiPresensi::orderBy('created_at', 'desc')->get()->map(function ($s) use ($userId) {
+            // Cek di tabel kehadiran
+            $s->user_has_attended = \App\Models\Kehadiran::where('sesi_presensi_id', $s->id)
+                                        ->where('user_id', $userId)
+                                        ->exists();
+            return $s;
+        });
         
         return response()->json([
             'status' => 'success',

@@ -10,7 +10,6 @@ use Carbon\Carbon;
 
 class KehadiranController extends Controller
 {
-    // Mengambil daftar anggota sesuai tingkatan rapat
     public function getPeserta($sesi_id)
     {
         $sesi = SesiPresensi::findOrFail($sesi_id);
@@ -26,58 +25,61 @@ class KehadiranController extends Controller
         $users = $usersQuery->get();
         $kehadiran = Kehadiran::where('sesi_presensi_id', $sesi_id)->get()->keyBy('user_id');
 
-        // Menentukan apakah rapat sudah melewati batas waktu
         $waktuBatas = Carbon::parse($sesi->tanggal . ' ' . $sesi->batas_waktu);
         $isTerlambat = now()->greaterThan($waktuBatas);
 
         $peserta = $users->map(function($u) use ($kehadiran, $isTerlambat) {
-            // Jika sudah ada data di database (Sudah absen/direkap admin)
+            $bukti_izin = null;
             if (isset($kehadiran[$u->id])) {
                 $status = $kehadiran[$u->id]->status;
+                // Ubah tampilan dari DB Alpa menjadi Tidak Hadir
+                if ($status === 'Alpa') $status = 'Tidak Hadir'; 
+                $bukti_izin = $kehadiran[$u->id]->bukti_izin;
             } else {
-                // Jika belum absen: Tentukan 'Alpa' jika terlambat, atau 'Belum Presensi' jika masih ada waktu
-                $status = $isTerlambat ? 'Alpa' : 'Belum Presensi';
+                $status = $isTerlambat ? 'Tidak Hadir' : 'Belum Presensi';
             }
 
             return [
                 'user_id' => $u->id,
                 'name' => $u->name,
                 'role' => $u->role,
-                'status' => $status
+                'status' => $status,
+                'bukti_izin' => $bukti_izin
             ];
         });
 
         return response()->json(['status' => 'success', 'data' => $peserta]);
     }
 
-    // Menyimpan data kehadiran massal dari Admin
     public function simpanKehadiran(Request $request, $sesi_id)
     {
         $request->validate([
             'kehadiran' => 'required|array',
             'kehadiran.*.user_id' => 'required|exists:users,id',
-            'kehadiran.*.status' => 'required|in:Hadir,Izin,Sakit,Alpa,Belum Presensi',
+            'kehadiran.*.status' => 'required|in:Hadir,Izin,Tidak Hadir,Belum Presensi',
         ]);
 
         foreach ($request->kehadiran as $absen) {
-            // Abaikan jika statusnya masih "Belum Presensi" (biarkan database kosong)
             if ($absen['status'] === 'Belum Presensi') continue;
+
+            // Kembalikan ke format enum DB
+            $statusDB = $absen['status'] === 'Tidak Hadir' ? 'Alpa' : $absen['status']; 
 
             Kehadiran::updateOrCreate(
                 ['sesi_presensi_id' => $sesi_id, 'user_id' => $absen['user_id']],
-                ['status' => $absen['status'], 'waktu_presensi' => now()]
+                ['status' => $statusDB, 'waktu_presensi' => now()]
             );
         }
 
         return response()->json(['status' => 'success', 'message' => 'Data kehadiran berhasil disimpan.']);
     }
 
-    // Fungsi untuk User melakukan presensi mandiri menggunakan kode (Bisa pilih Hadir/Izin/Sakit)
     public function submitKode(Request $request, $sesi_id)
     {
         $request->validate([
-            'kode_presensi' => 'required|string',
-            'status' => 'required|in:Hadir,Izin,Sakit' // Wajib menyertakan status
+            'status' => 'required|in:Hadir,Izin',
+            'kode_presensi' => 'required_if:status,Hadir', // Kode HANYA wajib jika status Hadir
+            'bukti_izin' => 'required_if:status,Izin|nullable|url' // Link surat Izin
         ]);
 
         $sesi = SesiPresensi::findOrFail($sesi_id);
@@ -88,18 +90,24 @@ class KehadiranController extends Controller
 
         $waktuBatas = Carbon::parse($sesi->tanggal . ' ' . $sesi->batas_waktu);
         if (now()->greaterThan($waktuBatas)) {
-            return response()->json(['status' => 'error', 'message' => 'Batas waktu presensi telah lewat. Anda dihitung Alpa.'], 400);
+            return response()->json(['status' => 'error', 'message' => 'Batas waktu presensi telah lewat. Anda dihitung Tidak Hadir.'], 400);
         }
 
-        if (strtoupper($sesi->kode_presensi) !== strtoupper($request->kode_presensi)) {
-            return response()->json(['status' => 'error', 'message' => 'Kode presensi tidak valid.'], 400);
+        if ($request->status === 'Hadir') {
+            if (strtoupper($sesi->kode_presensi) !== strtoupper($request->kode_presensi)) {
+                return response()->json(['status' => 'error', 'message' => 'Kode presensi tidak valid.'], 400);
+            }
         }
 
         Kehadiran::updateOrCreate(
             ['sesi_presensi_id' => $sesi_id, 'user_id' => auth()->id()],
-            ['status' => $request->status, 'waktu_presensi' => now()]
+            [
+                'status' => $request->status, 
+                'waktu_presensi' => now(),
+                'bukti_izin' => $request->status === 'Izin' ? $request->bukti_izin : null
+            ]
         );
 
-        return response()->json(['status' => 'success', 'message' => 'Berhasil melakukan presensi!']);
+        return response()->json(['status' => 'success', 'message' => 'Berhasil mengirim presensi!']);
     }
 }
