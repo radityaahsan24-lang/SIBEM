@@ -230,7 +230,7 @@ export default function Presensi() {
   };
 
   const inputWrapper = "relative flex items-center";
-  const inputClass = "w-full pl-11 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600";
+  const inputClass = "w-full pl-11 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:bg-white focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-600";
   const selectClass = `${inputClass} appearance-none pr-10`;
 
   return (
@@ -265,7 +265,7 @@ export default function Presensi() {
           )}
 
           {isBPH && viewMode === "aktif" && (
-            <button onClick={() => { setModalMode("create"); setMessage(""); setFormData({ nama_kegiatan: "", tingkatan: "Komunal", kementerian: "", tanggal: "", waktu_mulai: "", batas_waktu: "" }); setIsFormModalOpen(true); }} className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm text-sm whitespace-nowrap">
+            <button onClick={() => { setModalMode("create"); setMessage(""); setFormData({ nama_kegiatan: "", tingkatan: "Komunal", kementerian: "", tanggal: "", waktu_mulai: "", batas_waktu: "" }); setIsFormModalOpen(true); }} className="flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm text-sm whitespace-nowrap">
               Buat Presensi
             </button>
           )}
@@ -278,7 +278,7 @@ export default function Presensi() {
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <button 
             onClick={() => setSelectedHistorySesi(null)}
-            className="text-sm font-bold text-gray-400 hover:text-blue-600 mb-6 flex items-center gap-2 transition-colors"
+            className="text-sm font-bold text-gray-400 hover:text-orange-600 mb-6 flex items-center gap-2 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
             Kembali ke Daftar Riwayat
@@ -286,7 +286,7 @@ export default function Presensi() {
           
           <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-6">
             <div>
-              <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1.5">Hasil Rekapitulasi Kehadiran</h2>
+              <h2 className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-1.5">Hasil Rekapitulasi Kehadiran</h2>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{selectedHistorySesi.nama_kegiatan}</h1>
               <p className="text-gray-500 font-medium text-sm mt-1">{selectedHistorySesi.tanggal} | {selectedHistorySesi.waktu_mulai.substring(0, 5)} - {selectedHistorySesi.batas_waktu.substring(0, 5)} WIB</p>
             </div>
@@ -315,7 +315,7 @@ export default function Presensi() {
                   <div className="flex items-center flex-wrap gap-3">
                     <span className={`px-4 py-1.5 rounded-lg text-xs font-bold border tracking-wide ${
                       peserta.status === 'Hadir' ? 'bg-green-100 text-green-700 border-green-300' :
-                      peserta.status === 'Izin' ? 'bg-blue-100 text-blue-700 border-blue-300' :
+                      peserta.status === 'Izin' ? 'bg-orange-100 text-orange-700 border-orange-300' :
                       'bg-red-100 text-red-700 border-red-300' // Untuk "Tidak Hadir"
                     }`}>
                       {peserta.status}
@@ -326,7 +326,7 @@ export default function Presensi() {
                         href={peserta.bukti_izin} 
                         target="_blank" 
                         rel="noreferrer" 
-                        className="text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-white px-3 py-1.5 rounded-lg border border-blue-200 transition-colors flex items-center gap-1.5 shadow-sm"
+                        className="text-xs font-bold text-orange-600 hover:text-white hover:bg-orange-600 bg-white px-3 py-1.5 rounded-lg border border-orange-200 transition-colors flex items-center gap-1.5 shadow-sm"
                       >
                         Lihat Surat
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
@@ -356,10 +356,10 @@ export default function Presensi() {
                   <div key={sesi.id} className="relative group animate-in zoom-in-95 duration-300">
                     <div 
                       onClick={() => openHistoryDetail(sesi)} 
-                      className="cursor-pointer bg-white border border-gray-100 rounded-[24px] shadow-sm hover:border-blue-300 hover:shadow-md p-5 flex flex-col transition-all opacity-95 h-full"
+                      className="cursor-pointer bg-white border border-gray-100 rounded-[24px] shadow-sm hover:border-orange-300 hover:shadow-md p-5 flex flex-col transition-all opacity-95 h-full"
                     >
                       <div className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-[20px] text-[10px] font-bold bg-gray-100 text-gray-500 tracking-wider">SELESAI</div>
-                      <h3 className="text-lg font-extrabold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors pr-12 leading-tight">{sesi.nama_kegiatan}</h3>
+                      <h3 className="text-lg font-extrabold text-gray-900 mb-1 group-hover:text-orange-700 transition-colors pr-12 leading-tight">{sesi.nama_kegiatan}</h3>
                       <p className="text-sm font-semibold text-gray-500 mb-6">{sesi.tingkatan} {sesi.kementerian ? `(${sesi.kementerian})` : ""}</p>
                       <div className="mt-auto flex items-center text-gray-400 text-xs font-bold uppercase tracking-wider bg-gray-50 w-fit px-3 py-1.5 rounded-lg border border-gray-100">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 mr-2"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
@@ -411,7 +411,7 @@ export default function Presensi() {
                   <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
                     {isBPH ? (
                       <div className="flex gap-2">
-                        <button onClick={() => { setModalMode("edit"); setSelectedSesi(sesi); setMessage(""); setFormData({ nama_kegiatan: sesi.nama_kegiatan, tingkatan: sesi.tingkatan, kementerian: sesi.kementerian || "", tanggal: sesi.tanggal, waktu_mulai: sesi.waktu_mulai.substring(0, 5), batas_waktu: sesi.batas_waktu.substring(0, 5) }); setIsFormModalOpen(true); }} className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl border border-transparent hover:border-blue-100 transition-colors" title="Edit">
+                        <button onClick={() => { setModalMode("edit"); setSelectedSesi(sesi); setMessage(""); setFormData({ nama_kegiatan: sesi.nama_kegiatan, tingkatan: sesi.tingkatan, kementerian: sesi.kementerian || "", tanggal: sesi.tanggal, waktu_mulai: sesi.waktu_mulai.substring(0, 5), batas_waktu: sesi.batas_waktu.substring(0, 5) }); setIsFormModalOpen(true); }} className="p-2.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-xl border border-transparent hover:border-orange-100 transition-colors" title="Edit">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
                         </button>
                         <button onClick={() => { setSelectedSesi(sesi); setIsDeleteModalOpen(true); }} className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-100 transition-colors" title="Hapus">
@@ -426,13 +426,13 @@ export default function Presensi() {
                            ✅ Sudah Presensi
                          </div>
                       ) : (
-                        <button onClick={() => { setSelectedSesi(sesi); setIsInputModalOpen(true); setMessage(""); setInputKode(""); setInputStatus("Hadir"); setInputLinkIzin(""); }} className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border border-blue-200 transition-colors whitespace-nowrap shadow-sm">
+                        <button onClick={() => { setSelectedSesi(sesi); setIsInputModalOpen(true); setMessage(""); setInputKode(""); setInputStatus("Hadir"); setInputLinkIzin(""); }} className="bg-white text-orange-600 hover:bg-orange-50 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border border-orange-200 transition-colors whitespace-nowrap shadow-sm">
                           Isi Presensi
                         </button>
                       )}
                       
                       {isBPH && (
-                        <button onClick={() => openActionModal(sesi)} className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border border-transparent shadow-sm shadow-blue-500/30 transition-all active:scale-[0.98] whitespace-nowrap">
+                        <button onClick={() => openActionModal(sesi)} className="bg-orange-600 text-white hover:bg-orange-700 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border border-transparent shadow-sm shadow-orange-500/30 transition-all active:scale-[0.98] whitespace-nowrap">
                           Daftar Hadir
                         </button>
                       )}
@@ -452,7 +452,7 @@ export default function Presensi() {
           <div className="bg-white p-6 sm:p-8 rounded-[32px] shadow-2xl w-full max-w-sm relative text-center animate-in zoom-in-95 duration-200">
             <button onClick={() => setIsInputModalOpen(false)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors">✕</button>
             
-            <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1.5">Presensi Kehadiran</h2>
+            <h2 className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-1.5">Presensi Kehadiran</h2>
             <h1 className="text-xl font-extrabold text-gray-900 mb-6 leading-tight">{selectedSesi.nama_kegiatan}</h1>
 
             {message && (
@@ -462,7 +462,7 @@ export default function Presensi() {
             <form onSubmit={handleInputKodeSubmit}>
               <div className="grid grid-cols-2 gap-2 mb-6 bg-gray-50 p-2 rounded-2xl border border-gray-100">
                 {['Hadir', 'Izin'].map((status) => (
-                  <button key={status} type="button" onClick={() => { setInputStatus(status); setInputLinkIzin(""); setInputKode(""); }} className={`py-2 rounded-xl text-sm font-bold transition-all ${inputStatus === status ? "bg-white shadow-sm border border-gray-200 text-blue-600" : "text-gray-500 hover:bg-gray-100"}`}>
+                  <button key={status} type="button" onClick={() => { setInputStatus(status); setInputLinkIzin(""); setInputKode(""); }} className={`py-2 rounded-xl text-sm font-bold transition-all ${inputStatus === status ? "bg-white shadow-sm border border-gray-200 text-orange-600" : "text-gray-500 hover:bg-gray-100"}`}>
                     {status}
                   </button>
                 ))}
@@ -476,7 +476,7 @@ export default function Presensi() {
                     value={inputLinkIzin} 
                     onChange={(e) => setInputLinkIzin(e.target.value)} 
                     placeholder="https://..."
-                    className="w-full text-sm font-medium py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
+                    className="w-full text-sm font-medium py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-600 transition-all"
                     required
                   />
                 </div>
@@ -488,13 +488,13 @@ export default function Presensi() {
                     onChange={(e) => setInputKode(e.target.value.toUpperCase())} 
                     maxLength={6}
                     placeholder="Kode 6 Digit"
-                    className="w-full text-center font-mono tracking-[0.3em] text-2xl font-black py-4 bg-gray-50 border border-gray-200 rounded-2xl mb-6 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 uppercase transition-all"
+                    className="w-full text-center font-mono tracking-[0.3em] text-2xl font-black py-4 bg-gray-50 border border-gray-200 rounded-2xl mb-6 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-600 uppercase transition-all"
                     required
                   />
                 </div>
               )}
 
-              <button type="submit" disabled={isFormLoading || (inputStatus === "Hadir" && inputKode.length < 6) || (inputStatus === "Izin" && inputLinkIzin.length < 5)} className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all shadow-sm bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 active:scale-[0.98] disabled:bg-blue-400 disabled:cursor-not-allowed disabled:shadow-none">
+              <button type="submit" disabled={isFormLoading || (inputStatus === "Hadir" && inputKode.length < 6) || (inputStatus === "Izin" && inputLinkIzin.length < 5)} className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all shadow-sm bg-orange-600 hover:bg-orange-700 shadow-orange-600/20 active:scale-[0.98] disabled:bg-orange-400 disabled:cursor-not-allowed disabled:shadow-none">
                 {isFormLoading ? "Memproses..." : "Kirim Presensi"}
               </button>
             </form>
@@ -509,7 +509,7 @@ export default function Presensi() {
             <button onClick={() => setIsActionModalOpen(false)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-full p-2 transition-colors">✕</button>
 
             <div className="mb-6">
-              <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-1.5">Daftar Kehadiran Berlangsung</h2>
+              <h2 className="text-xs font-black text-orange-600 uppercase tracking-[0.2em] mb-1.5">Daftar Kehadiran Berlangsung</h2>
               <h1 className="text-2xl font-extrabold text-gray-900">{selectedSesi.nama_kegiatan}</h1>
             </div>
 
@@ -537,7 +537,7 @@ export default function Presensi() {
                             const isSelected = statusHadir[peserta.user_id] === status;
                             let activeColor = "";
                             if(status === 'Hadir') activeColor = "bg-green-100 text-green-700 border-green-300 shadow-sm";
-                            if(status === 'Izin') activeColor = "bg-blue-100 text-blue-700 border-blue-300 shadow-sm";
+                            if(status === 'Izin') activeColor = "bg-orange-100 text-orange-700 border-orange-300 shadow-sm";
                             if(status === 'Tidak Hadir') activeColor = "bg-red-100 text-red-700 border-red-300 shadow-sm";
 
                             return (
@@ -548,7 +548,7 @@ export default function Presensi() {
                           })}
                         </div>
                         {peserta.status === 'Izin' && peserta.bukti_izin && (
-                          <a href={peserta.bukti_izin} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-blue-500 hover:text-blue-700 underline flex items-center gap-1">
+                          <a href={peserta.bukti_izin} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-orange-500 hover:text-orange-700 underline flex items-center gap-1">
                             Buka Bukti Izin <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
                           </a>
                         )}
@@ -593,7 +593,7 @@ export default function Presensi() {
                   </select>
                 </div>
               )}
-              <button type="submit" disabled={isFormLoading} className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm transition-all ${isFormLoading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-600/20 active:scale-[0.98]"}`}>
+              <button type="submit" disabled={isFormLoading} className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm transition-all ${isFormLoading ? "bg-orange-400 cursor-not-allowed" : "bg-orange-600 hover:bg-orange-700 shadow-sm shadow-orange-600/20 active:scale-[0.98]"}`}>
                 {isFormLoading ? "Memproses..." : (modalMode === "create" ? "Generate Kode Presensi" : "Simpan Perubahan")}
               </button>
             </form>

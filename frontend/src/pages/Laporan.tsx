@@ -97,7 +97,7 @@ const formatTanggal = (tanggal: string) =>
 const getStatusStyle = (status: Status) => {
   const styles: Record<Status, string> = {
     Selesai: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-    Proses: "bg-blue-50 text-blue-700 ring-blue-600/20",
+    Proses: "bg-orange-50 text-orange-700 ring-orange-600/20",
     Menunggu: "bg-amber-50 text-amber-700 ring-amber-600/20",
     Ditolak: "bg-red-50 text-red-700 ring-red-600/20",
   };
@@ -108,7 +108,7 @@ const getStatusStyle = (status: Status) => {
 const getStatusDot = (status: Status) => {
   const styles: Record<Status, string> = {
     Selesai: "bg-emerald-500",
-    Proses: "bg-blue-500",
+    Proses: "bg-orange-500",
     Menunggu: "bg-amber-500",
     Ditolak: "bg-red-500",
   };
@@ -138,7 +138,7 @@ export default function Laporan() {
       value: ringkasan.totalKegiatan,
       note: "Seluruh kegiatan",
       icon: ClipboardList,
-      iconStyle: "bg-blue-50 text-blue-600",
+      iconStyle: "bg-orange-50 text-orange-600",
     },
     {
       label: "Pengajuan KAK",
@@ -187,7 +187,7 @@ export default function Laporan() {
 
           <button
             type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700 sm:w-auto"
           >
             <FileDown size={17} />
             Export PDF
@@ -238,7 +238,7 @@ export default function Laporan() {
             <select
               aria-label="Pilih periode laporan"
               defaultValue=""
-              className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-600 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-600 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
             >
               <option value="">Semua Periode</option>
               <option value="januari">Januari 2026</option>
@@ -254,7 +254,7 @@ export default function Laporan() {
           <select
             aria-label="Pilih kategori laporan"
             defaultValue=""
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-600 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
           >
             <option value="">Semua Kategori</option>
             <option value="kegiatan">Kegiatan</option>
@@ -271,7 +271,7 @@ export default function Laporan() {
             <input
               type="search"
               placeholder="Cari kegiatan atau kementerian..."
-              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
             />
           </div>
         </div>
@@ -323,7 +323,7 @@ export default function Laporan() {
               {laporanData.map((laporan, index) => (
                 <tr
                   key={laporan.id}
-                  className="transition hover:bg-blue-50/30"
+                  className="transition hover:bg-orange-50/30"
                 >
                   <td className="px-5 py-4 text-sm font-medium text-gray-500">
                     {String(index + 1).padStart(2, "0")}
@@ -373,7 +373,7 @@ export default function Laporan() {
             >
               Sebelumnya
             </button>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-semibold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-xs font-semibold text-white">
               1
             </span>
             <button

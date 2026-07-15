@@ -212,7 +212,7 @@ const PengajuanKAK = () => {
       case "ditolak":
         return "bg-red-100 text-red-800";
       case "revisi":
-        return "bg-blue-100 text-blue-800";
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -397,7 +397,7 @@ const PengajuanKAK = () => {
 
                         <button
                           onClick={() => handleEditClick(kak)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition"
+                          className="text-orange-600 hover:text-orange-800 text-sm font-medium bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-md transition"
                         >
                           Edit
                         </button>

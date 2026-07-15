@@ -15,6 +15,7 @@ class Proker extends Model
         'divisi',
         'deskripsi',
         'status',
-        'tanggal_pelaksanaan'
+        'tanggal_pelaksanaan',
+        'user_id'
     ];
 }
