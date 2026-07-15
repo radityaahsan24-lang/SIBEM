@@ -176,7 +176,7 @@ export default function Kementerian() {
           <input
             type="text"
             placeholder="Cari kementerian..."
-            className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all shadow-sm"
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-600 transition-all shadow-sm"
           />
         </div>
       </div>
@@ -191,12 +191,12 @@ export default function Kementerian() {
           kementerianList.map((item) => (
             <div
               key={item.id}
-              className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all hover:border-blue-100 group"
+              className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all hover:border-orange-100 group"
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="flex items-center gap-3 mb-1.5">
-                    <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
+                    <h2 className="text-xl font-bold text-gray-900 group-hover:text-orange-700 transition-colors">
                       {item.nama}
                     </h2>
                     <span className="px-2.5 py-1 rounded-md text-xs font-bold border bg-green-50 text-green-700 border-green-200/60">
@@ -205,7 +205,7 @@ export default function Kementerian() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-gray-500 font-medium">Menteri:</span>
-                    <span className={`font-semibold ${item.menteriObj ? "text-blue-600" : "text-gray-400 italic"}`}>
+                    <span className={`font-semibold ${item.menteriObj ? "text-orange-600" : "text-gray-400 italic"}`}>
                       {item.menteri}
                     </span>
                   </div>
@@ -213,7 +213,7 @@ export default function Kementerian() {
 
                 <button 
                   onClick={() => openDetailModal(item)}
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 flex items-center gap-2"
+                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-orange-600 hover:text-white hover:border-orange-600 transition-all active:scale-95 flex items-center gap-2"
                 >
                   Detail
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
@@ -266,13 +266,13 @@ export default function Kementerian() {
               <div>
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Menteri Kementerian</h3>
                 {selectedKementerian.menteriObj ? (
-                  <div className="flex items-center gap-4 bg-linear-to-r from-blue-50 to-white border border-blue-100 p-4 rounded-2xl">
-                    <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-inner shrink-0">
+                  <div className="flex items-center gap-4 bg-linear-to-r from-orange-50 to-white border border-orange-100 p-4 rounded-2xl">
+                    <div className="h-12 w-12 rounded-full bg-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-inner shrink-0">
                       {selectedKementerian.menteriObj.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <p className="text-lg font-bold text-gray-900">{selectedKementerian.menteriObj.name}</p>
-                      <p className="text-sm font-semibold text-blue-600">{selectedKementerian.menteriObj.role}</p>
+                      <p className="text-sm font-semibold text-orange-600">{selectedKementerian.menteriObj.role}</p>
                     </div>
                   </div>
                 ) : (
@@ -328,7 +328,7 @@ function Card({
   color: "blue" | "orange" | "green";
 }) {
   const colorStyles = {
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
+    blue: "bg-orange-50 text-orange-600 border-orange-100",
     orange: "bg-orange-50 text-orange-600 border-orange-100",
     green: "bg-green-50 text-green-600 border-green-100",
   };

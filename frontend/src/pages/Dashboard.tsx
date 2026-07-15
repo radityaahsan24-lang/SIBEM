@@ -108,7 +108,7 @@ export default function Dashboard() {
             <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-50 flex flex-col items-center justify-center text-center">
               <span className="text-3xl font-light text-gray-600">36</span>
               <div className="flex items-center gap-1 mt-2 text-[10px] font-medium text-gray-500">
-                <span className="text-blue-500 bg-blue-50 p-1 rounded-md">
+                <span className="text-orange-500 bg-orange-50 p-1 rounded-md">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
                 </span> Total Proker
               </div>
@@ -164,14 +164,14 @@ export default function Dashboard() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-medium flex items-center gap-2 text-gray-600">
-                    <span className="text-blue-400">
+                    <span className="text-orange-400">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </span> Rapat Kerja BEM
                   </span>
                   <span className="text-xs font-bold text-gray-600">74%</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: '74%' }}></div>
+                  <div className="bg-orange-400 h-1.5 rounded-full" style={{ width: '74%' }}></div>
                 </div>
               </div>
             </div>

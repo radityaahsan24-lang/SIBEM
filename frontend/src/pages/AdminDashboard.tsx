@@ -121,7 +121,7 @@ export default function AdminDashboard() {
       return "bg-purple-100 text-purple-700 border-purple-200"; // Pengurus Inti
     }
     if (role.includes("Menteri") || role.includes("Sekjen")) {
-      return "bg-blue-100 text-blue-700 border-blue-200"; // Menteri
+      return "bg-orange-100 text-orange-700 border-orange-200"; // Menteri
     }
     return "bg-orange-100 text-orange-700 border-orange-200"; // Staff
   };
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 bg-white p-8 rounded-[30px] shadow-sm border border-slate-100 gap-6 lg:gap-0 relative overflow-hidden">
           
           {/* Dekorasi Background Abstrak (Opsional untuk estetika) */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-50 to-blue-50 rounded-full blur-3xl -z-10 transform translate-x-20 -translate-y-20 opacity-60"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-50 to-orange-50 rounded-full blur-3xl -z-10 transform translate-x-20 -translate-y-20 opacity-60"></div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 z-10">
             {/* Bagian Dua Logo */}
@@ -338,13 +338,13 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              <div className="bg-blue-50/50 p-4 rounded-2xl text-sm text-slate-600 border border-blue-100 mt-2 flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+              <div className="bg-orange-50/50 p-4 rounded-2xl text-sm text-slate-600 border border-orange-100 mt-2 flex items-center gap-3">
+                <div className="bg-orange-100 p-2 rounded-full text-orange-600">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" /></svg>
                 </div>
                 <div>
                   Akan didaftarkan sebagai:<br/>
-                  <span className="font-extrabold text-blue-700 text-base">
+                  <span className="font-extrabold text-orange-700 text-base">
                     {isBendumAtauSekre ? `${jabatan} ${tingkat}`.trim() : isPengurusInti ? jabatan : `${jabatan} ${divisi}`}
                   </span>
                 </div>

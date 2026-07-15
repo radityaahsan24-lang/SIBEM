@@ -288,7 +288,7 @@ const Anggaran = () => {
                       {(isSekjen && anggaran.status === 'pending') && (
                           <button 
                              onClick={() => handleStatusChange(anggaran, 'verifikasi_sekjen')}
-                             className="text-white bg-blue-500 hover:bg-blue-600 text-xs font-bold px-2 py-1 rounded-md transition"
+                             className="text-white bg-orange-500 hover:bg-orange-600 text-xs font-bold px-2 py-1 rounded-md transition"
                              title="Verifikasi Tahap 1"
                           >
                              Verifikasi
@@ -315,7 +315,7 @@ const Anggaran = () => {
                           </button>
                       )}
 
-                      <button onClick={() => handleEditClick(anggaran)} className="text-blue-600 hover:text-blue-800 text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition">Edit</button>
+                      <button onClick={() => handleEditClick(anggaran)} className="text-orange-600 hover:text-orange-800 text-sm font-medium bg-orange-50 hover:bg-orange-100 px-3 py-1 rounded-md transition">Edit</button>
                       <button onClick={() => handleDeleteClick(anggaran.id)} className="text-red-600 hover:text-red-800 text-sm font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition">Hapus</button>
                     </td>
                   </tr>

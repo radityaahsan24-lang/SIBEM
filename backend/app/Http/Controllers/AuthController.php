@@ -33,6 +33,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => [
+                'id' => $user->id,
                 'name' => $user->name,
                 'role' => $user->role, // Penting untuk RBAC
             ]

@@ -7,10 +7,26 @@ use Illuminate\Http\Request;
 
 class ProkerController extends Controller
 {
-    // Mengambil semua daftar proker
+    // Mengambil daftar proker (difilter berdasarkan role)
     public function index()
     {
-        $prokers = Proker::all();
+        $user = auth()->user();
+        $role = $user->role;
+
+        // BPH melihat semua
+        $isBPH = in_array($role, ['Presiden BEM', 'Wakil Presiden BEM', 'Bendahara', 'Sekretaris']) 
+                 || str_starts_with($role, 'Bendahara') 
+                 || str_starts_with($role, 'Sekretaris');
+
+        if ($isBPH || $role === 'admin') {
+            $prokers = Proker::all();
+        } else {
+            // Misalnya 'Menteri Kastrat', ambil 'Kastrat'
+            $parts = explode(' ', $role, 2);
+            $divisiUser = isset($parts[1]) ? $parts[1] : '';
+            $prokers = Proker::where('divisi', $divisiUser)->get();
+        }
+
         return response()->json($prokers);
     }
 
@@ -25,7 +41,10 @@ class ProkerController extends Controller
             'tanggal_pelaksanaan' => 'nullable|date'
         ]);
 
-        $proker = Proker::create($request->all());
+        $data = $request->all();
+        $data['user_id'] = auth()->id();
+
+        $proker = Proker::create($data);
 
         return response()->json([
             'message' => 'Program kerja berhasil ditambahkan!', 
