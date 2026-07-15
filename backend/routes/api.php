@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProkerController;
+use App\Http\Controllers\KakController;
 use App\Http\Controllers\SesiPresensiController;
 use App\Http\Controllers\KehadiranController;
 
@@ -26,6 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/proker', [ProkerController::class, 'store']);
     Route::put('/proker/{id}', [ProkerController::class, 'update']);
     Route::delete('/proker/{id}', [ProkerController::class, 'destroy']);
+
+    // Rute untuk mengelola KAK & LPJ
+    Route::get('/kak', [KakController::class, 'index']);
+    Route::post('/kak', [KakController::class, 'store']);
+    Route::put('/kak/{id}', [KakController::class, 'update']);
+    Route::delete('/kak/{id}', [KakController::class, 'destroy']);
 
     // Rute untuk mengelola Anggaran
     Route::get('/anggaran', [\App\Http\Controllers\AnggaranController::class, 'index']);
