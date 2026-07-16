@@ -14,6 +14,22 @@ interface AnggaranData {
   status: string;
 }
 
+interface KAKDataSimple {
+  id: number;
+  nama_kegiatan: string;
+  divisi: string;
+  anggaran_estimasi: number | null;
+  status: string;
+}
+
+interface LPJDataSimple {
+  id: number;
+  kak_id: number | null;
+  link: string;
+  total_anggaran: number;
+  status: string;
+}
+
 const Anggaran = () => {
   const [daftarAnggaran, setDaftarAnggaran] = useState<AnggaranData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +53,53 @@ const Anggaran = () => {
 
   useEffect(() => {
     fetchAnggarans();
+    fetchKAKData();
+    fetchLPJData();
+    fetchPaguAwal();
   }, []);
+
+  // Data KAK & LPJ untuk kalkulasi ringkasan
+  const [daftarKAK, setDaftarKAK] = useState<KAKDataSimple[]>([]);
+  const [daftarLPJ, setDaftarLPJ] = useState<LPJDataSimple[]>([]);
+
+  // Dana Pagu Awal BEM (dari database)
+  const [danaPaguAwal, setDanaPaguAwal] = useState(0);
+
+  async function fetchPaguAwal() {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://127.0.0.1:8000/api/settings/pagu", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDanaPaguAwal(response.data.dana_pagu_awal);
+    } catch (error) {
+      console.error("Gagal mengambil data pagu:", error);
+    }
+  }
+
+  async function fetchKAKData() {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://127.0.0.1:8000/api/kak", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDaftarKAK(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil data KAK:", error);
+    }
+  }
+
+  async function fetchLPJData() {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://127.0.0.1:8000/api/lpj", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDaftarLPJ(response.data);
+    } catch (error) {
+      console.error("Gagal mengambil data LPJ:", error);
+    }
+  }
 
   async function fetchAnggarans(silent = false) {
     if (!silent) setIsFetching(true);
@@ -214,31 +276,65 @@ const Anggaran = () => {
           onClick={handleAddClick}
           className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-sm font-medium w-full sm:w-auto"
         >
-          + Ajukan Anggaran
+          + Tambahkan Anggaran
         </button>
       </div>
 
-      {/* Ringkasan Anggaran (Pagu Dana) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50">
-            <h3 className="text-gray-500 text-sm font-medium mb-1">Total Pemasukan</h3>
-            <p className="text-2xl font-bold text-green-600">
-               {formatRupiah(daftarAnggaran.filter(a => a.jenis === 'pemasukan' && a.status === 'disetujui').reduce((acc, curr) => acc + parseFloat(String(curr.jumlah)), 0))}
-            </p>
-         </div>
-         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50">
-            <h3 className="text-gray-500 text-sm font-medium mb-1">Total Pengeluaran (Disetujui)</h3>
-            <p className="text-2xl font-bold text-red-500">
-               {formatRupiah(daftarAnggaran.filter(a => a.jenis === 'pengeluaran' && a.status === 'disetujui').reduce((acc, curr) => acc + parseFloat(String(curr.jumlah)), 0))}
-            </p>
-         </div>
-         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50">
-            <h3 className="text-gray-500 text-sm font-medium mb-1">Menunggu Validasi</h3>
-            <p className="text-2xl font-bold text-yellow-600">
-               {daftarAnggaran.filter(a => a.status === 'pending' || a.status === 'verifikasi_sekjen').length} Pengajuan
-            </p>
-         </div>
-      </div>
+      {/* Ringkasan Anggaran */}
+      {(() => {
+        // Hitung total anggaran KAK yang sudah di-ACC
+        const totalDialokasikan = daftarKAK
+          .filter(k => k.status === 'disetujui' && k.anggaran_estimasi)
+          .reduce((acc, curr) => acc + (curr.anggaran_estimasi || 0), 0);
+
+        // Hitung total realisasi dari LPJ yang sudah di-ACC
+        const totalRealisasi = daftarLPJ
+          .filter(l => l.status === 'disetujui')
+          .reduce((acc, curr) => acc + curr.total_anggaran, 0);
+
+        // Hitung selisih realisasi vs alokasi KAK
+        // Untuk setiap LPJ yang di-ACC, cari KAK terkait
+        let selisihRealisasi = 0;
+        daftarLPJ.filter(l => l.status === 'disetujui').forEach(lpj => {
+          const kakTerkait = daftarKAK.find(k => k.id === lpj.kak_id);
+          if (kakTerkait && kakTerkait.anggaran_estimasi) {
+            // Jika realisasi < anggaran KAK → selisih positif (dana kembali)
+            // Jika realisasi > anggaran KAK → selisih negatif (dana berkurang lagi)
+            selisihRealisasi += (kakTerkait.anggaran_estimasi - lpj.total_anggaran);
+          }
+        });
+
+        // Anggaran Tersisa = Pagu - Dialokasikan + Selisih Realisasi
+        const anggaranTersisa = danaPaguAwal - totalDialokasikan + selisihRealisasi;
+
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50">
+              <h3 className="text-gray-500 text-sm font-medium mb-1">Dana Pagu Awal</h3>
+              <p className="text-2xl font-bold text-gray-800">{formatRupiah(danaPaguAwal)}</p>
+            </div>
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-50">
+              <h3 className="text-orange-600 text-sm font-medium mb-1">Total Dialokasikan (KAK ACC)</h3>
+              <p className="text-2xl font-bold text-orange-700">{formatRupiah(totalDialokasikan)}</p>
+              <p className="text-xs text-gray-400 mt-1">{daftarKAK.filter(k => k.status === 'disetujui').length} kegiatan</p>
+            </div>
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-blue-50">
+              <h3 className="text-blue-600 text-sm font-medium mb-1">Total Realisasi (LPJ ACC)</h3>
+              <p className="text-2xl font-bold text-blue-700">{formatRupiah(totalRealisasi)}</p>
+              <p className="text-xs text-gray-400 mt-1">{daftarLPJ.filter(l => l.status === 'disetujui').length} LPJ selesai</p>
+            </div>
+            <div className={`bg-white p-5 rounded-2xl shadow-sm border ${anggaranTersisa < 0 ? 'border-red-200 bg-red-50' : 'border-green-50'}`}>
+              <h3 className={`text-sm font-medium mb-1 ${anggaranTersisa < 0 ? 'text-red-600' : 'text-green-600'}`}>Anggaran Tersisa</h3>
+              <p className={`text-2xl font-bold ${anggaranTersisa < 0 ? 'text-red-700' : 'text-green-700'}`}>{formatRupiah(anggaranTersisa)}</p>
+              {selisihRealisasi !== 0 && (
+                <p className={`text-xs mt-1 ${selisihRealisasi > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {selisihRealisasi > 0 ? '+' : ''}{formatRupiah(selisihRealisasi)} dari selisih LPJ
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -337,7 +433,7 @@ const Anggaran = () => {
         <div className="fixed inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-[95%] sm:w-full max-w-lg p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-gray-800">
-              {isEditMode ? "Edit Anggaran" : "Ajukan Anggaran"}
+              {isEditMode ? "Edit Anggaran" : "Tambahkan Anggaran"}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">

@@ -25,6 +25,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/anggaran/{id}', [\App\Http\Controllers\AnggaranController::class, 'update']);
     Route::delete('/anggaran/{id}', [\App\Http\Controllers\AnggaranController::class, 'destroy']);
 
+    // Rute untuk mengelola KAK (Kerangka Acuan Kerja)
+    Route::get('/kak', [\App\Http\Controllers\KAKController::class, 'index']);
+    Route::post('/kak', [\App\Http\Controllers\KAKController::class, 'store']);
+    Route::put('/kak/{id}', [\App\Http\Controllers\KAKController::class, 'update']);
+    Route::delete('/kak/{id}', [\App\Http\Controllers\KAKController::class, 'destroy']);
+
+    // Rute untuk mengelola LPJ (Laporan Pertanggungjawaban)
+    Route::get('/lpj', [\App\Http\Controllers\LPJController::class, 'index']);
+    Route::post('/lpj', [\App\Http\Controllers\LPJController::class, 'store']);
+    Route::put('/lpj/{id}', [\App\Http\Controllers\LPJController::class, 'update']);
+    Route::delete('/lpj/{id}', [\App\Http\Controllers\LPJController::class, 'destroy']);
+
+    // Rute untuk mengelola Setting (Dana Pagu Awal)
+    Route::get('/settings/pagu', [\App\Http\Controllers\SettingController::class, 'getPagu']);
+    Route::put('/settings/pagu', [\App\Http\Controllers\SettingController::class, 'updatePagu']);
+
     // Rute untuk Admin menambah akun pengurus baru
     Route::post('/users', [AuthController::class, 'createUser']);
 

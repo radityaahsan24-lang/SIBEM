@@ -30,11 +30,22 @@ const PengajuanKAK = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const [isLpjModalOpen, setIsLpjModalOpen] = useState(false);
-  const [lpjTargetId, setLpjTargetId] = useState<number | null>(null);
   const [lpjFormData, setLpjFormData] = useState({
+    kak_id: "",
     link: "",
     total_anggaran: "",
   });
+
+  // Daftar LPJ dari backend
+  interface LPJData {
+    id: number;
+    kak_id: number;
+    link: string;
+    total_anggaran: number;
+    status: string;
+    kak?: KAKData;
+  }
+  const [daftarLPJ, setDaftarLPJ] = useState<LPJData[]>([]);
 
   const [formData, setFormData] = useState({
     nama_kegiatan: "",
@@ -53,12 +64,18 @@ const PengajuanKAK = () => {
       setIsFetching(true);
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://127.0.0.1:8000/api/kak", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setDaftarKAK(response.data);
+        const [kakRes, lpjRes] = await Promise.all([
+          axios.get("http://127.0.0.1:8000/api/kak", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get("http://127.0.0.1:8000/api/lpj", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        setDaftarKAK(kakRes.data);
+        setDaftarLPJ(lpjRes.data);
       } catch (error) {
-        console.error("Gagal mengambil data KAK:", error);
+        console.error("Gagal mengambil data:", error);
       } finally {
         setIsFetching(false);
       }
@@ -70,12 +87,18 @@ const PengajuanKAK = () => {
     if (!silent) setIsFetching(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://127.0.0.1:8000/api/kak", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setDaftarKAK(response.data);
+      const [kakRes, lpjRes] = await Promise.all([
+        axios.get("http://127.0.0.1:8000/api/kak", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get("http://127.0.0.1:8000/api/lpj", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      setDaftarKAK(kakRes.data);
+      setDaftarLPJ(lpjRes.data);
     } catch (error) {
-      console.error("Gagal mengambil data KAK:", error);
+      console.error("Gagal mengambil data:", error);
     } finally {
       if (!silent) setIsFetching(false);
     }
@@ -134,13 +157,18 @@ const PengajuanKAK = () => {
       };
 
       // --- LOGIKA VALIDASI 50% PAGU AWAL ---
-      const DANA_PAGU_AWAL = 15000000; // Contoh Pagu Awal: Rp 15.000.000
-      if (payload.anggaran_estimasi && payload.anggaran_estimasi >= (DANA_PAGU_AWAL * 0.5)) {
+      const paguRes = await axios.get("http://127.0.0.1:8000/api/settings/pagu", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const danaPaguAwal = paguRes.data.dana_pagu_awal;
+      const batasMaksimal = danaPaguAwal * 0.5;
+
+      if (payload.anggaran_estimasi && payload.anggaran_estimasi >= batasMaksimal) {
         alert(
           `SISTEM OTOMATIS MENOLAK!\n\n` +
           `Anggaran kegiatan yang diajukan melebihi batas maksimal 50% dari Dana Pagu Awal.\n` +
-          `- Dana Pagu Awal: Rp 15.000.000\n` +
-          `- Batas Maksimal (50%): Rp 7.500.000\n` +
+          `- Dana Pagu Awal: Rp ${danaPaguAwal.toLocaleString('id-ID')}\n` +
+          `- Batas Maksimal (50%): Rp ${batasMaksimal.toLocaleString('id-ID')}\n` +
           `- Pengajuan Anda: Rp ${payload.anggaran_estimasi.toLocaleString('id-ID')}`
         );
         setIsLoading(false);
@@ -203,26 +231,71 @@ const PengajuanKAK = () => {
   };
 
   const handleLpjClick = () => {
-    setLpjTargetId(null);
-    setLpjFormData({ link: "", total_anggaran: "" });
+    setLpjFormData({ kak_id: "", link: "", total_anggaran: "" });
     setIsLpjModalOpen(true);
   };
+
+  // Helper: Ambil KAK yang sudah di-ACC dan belum punya LPJ
+  const kakYangSudahACC = daftarKAK.filter(kak => 
+    kak.status === 'disetujui' && 
+    !daftarLPJ.some(lpj => lpj.kak_id === kak.id)
+  );
+
+  // Helper: ambil detail KAK terpilih di form LPJ
+  const selectedKAKForLPJ = lpjFormData.kak_id 
+    ? daftarKAK.find(k => k.id === Number(lpjFormData.kak_id)) 
+    : null;
 
   const handleLpjSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // TODO: Sambungkan ke endpoint backend jika sudah tersedia
-      console.log("Submit LPJ Data:", { id: lpjTargetId, ...lpjFormData });
-      
-      // Simulasi loading
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      alert("Berhasil! Tampilan pengajuan LPJ sudah selesai. Nanti tinggal kita hubungkan dengan Backend.");
+      const kakId = Number(lpjFormData.kak_id);
+      const kakTerkait = daftarKAK.find(k => k.id === kakId);
+      if (!kakTerkait || !kakTerkait.anggaran_estimasi) {
+        alert("Pilih kegiatan KAK yang valid.");
+        setIsLoading(false);
+        return;
+      }
+
+      const realisasi = Number(lpjFormData.total_anggaran);
+      const anggaranKAK = kakTerkait.anggaran_estimasi;
+      const selisih = realisasi - anggaranKAK;
+
+      // Simpan LPJ ke backend
+      const token = localStorage.getItem("token");
+      await axios.post("http://127.0.0.1:8000/api/lpj", {
+        kak_id: kakId,
+        link: lpjFormData.link,
+        total_anggaran: realisasi,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Beri info kepada user
+      let pesan = `LPJ berhasil diajukan!\n\n`;
+      pesan += `Kegiatan: ${kakTerkait.nama_kegiatan}\n`;
+      pesan += `Anggaran KAK: Rp ${anggaranKAK.toLocaleString('id-ID')}\n`;
+      pesan += `Realisasi Dana: Rp ${realisasi.toLocaleString('id-ID')}\n\n`;
+
+      if (selisih < 0) {
+        pesan += `✅ Dana lebih hemat Rp ${Math.abs(selisih).toLocaleString('id-ID')}.\nSisa akan dikembalikan ke Anggaran Tersisa saat LPJ di-ACC.`;
+      } else if (selisih > 0) {
+        pesan += `⚠️ Dana melebihi anggaran KAK sebesar Rp ${selisih.toLocaleString('id-ID')}.\nAnggaran Tersisa akan berkurang lagi saat LPJ di-ACC.`;
+      } else {
+        pesan += `✅ Realisasi dana sesuai dengan anggaran KAK. Sempurna!`;
+      }
+
+      alert(pesan);
       setIsLpjModalOpen(false);
+      fetchKAK(true); // Refresh data
     } catch (error) {
       console.error(error);
-      alert("Terjadi kesalahan.");
+      let msg = "Terjadi kesalahan saat menyimpan LPJ.";
+      if (axios.isAxiosError(error)) {
+        msg = error.response?.data?.message || msg;
+      }
+      alert(msg);
     } finally {
       setIsLoading(false);
     }
@@ -804,6 +877,44 @@ const PengajuanKAK = () => {
             <p className="text-sm text-gray-500 mb-4">Laporan Pertanggungjawaban Kegiatan</p>
             
             <form onSubmit={handleLpjSubmit} className="space-y-4">
+              {/* Pilih Kegiatan KAK */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pilih Kegiatan (KAK yang sudah di-ACC) <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 text-base sm:text-sm"
+                  value={lpjFormData.kak_id}
+                  onChange={(e) =>
+                    setLpjFormData({ ...lpjFormData, kak_id: e.target.value })
+                  }
+                >
+                  <option value="" disabled>-- Pilih Kegiatan --</option>
+                  {kakYangSudahACC.length > 0 ? (
+                    kakYangSudahACC.map(kak => (
+                      <option key={kak.id} value={kak.id}>
+                        {kak.nama_kegiatan} — {kak.divisi} (Rp {kak.anggaran_estimasi?.toLocaleString('id-ID')})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>Belum ada KAK yang di-ACC</option>
+                  )}
+                </select>
+              </div>
+
+              {/* Info Anggaran KAK Terpilih */}
+              {selectedKAKForLPJ && (
+                <div className="bg-teal-50 border border-teal-100 rounded-lg p-3">
+                  <p className="text-xs text-teal-600 font-medium">Anggaran Estimasi KAK</p>
+                  <p className="text-lg font-bold text-teal-800">
+                    Rp {selectedKAKForLPJ.anggaran_estimasi?.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Kementerian: {selectedKAKForLPJ.divisi}</p>
+                </div>
+              )}
+
+              {/* Link Dokumen LPJ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Link Dokumen LPJ <span className="text-red-500">*</span>
@@ -820,9 +931,10 @@ const PengajuanKAK = () => {
                 />
               </div>
               
+              {/* Total Realisasi Dana */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Total Anggaran Terpakai (Rp) <span className="text-red-500">*</span>
+                  Total Realisasi Dana (Rp) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -835,6 +947,27 @@ const PengajuanKAK = () => {
                   }
                 />
               </div>
+
+              {/* Preview Selisih */}
+              {selectedKAKForLPJ && lpjFormData.total_anggaran && (() => {
+                const realisasi = Number(lpjFormData.total_anggaran);
+                const estimasi = selectedKAKForLPJ.anggaran_estimasi || 0;
+                const selisih = realisasi - estimasi;
+                return (
+                  <div className={`rounded-lg p-3 border ${selisih > 0 ? 'bg-red-50 border-red-200' : selisih < 0 ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+                    <p className="text-xs font-medium text-gray-600 mb-1">Preview Selisih Dana:</p>
+                    {selisih < 0 && (
+                      <p className="text-sm font-bold text-green-700">✅ Hemat Rp {Math.abs(selisih).toLocaleString('id-ID')} — sisa akan dikembalikan</p>
+                    )}
+                    {selisih > 0 && (
+                      <p className="text-sm font-bold text-red-700">⚠️ Melebihi Rp {selisih.toLocaleString('id-ID')} — anggaran tersisa akan berkurang</p>
+                    )}
+                    {selisih === 0 && (
+                      <p className="text-sm font-bold text-blue-700">✅ Realisasi sesuai anggaran KAK</p>
+                    )}
+                  </div>
+                );
+              })()}
               
               <div className="flex justify-end gap-3 mt-6 pt-2">
                 <button
@@ -846,7 +979,7 @@ const PengajuanKAK = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || kakYangSudahACC.length === 0}
                   className="px-4 py-2 text-white bg-teal-600 hover:bg-teal-700 rounded-lg font-medium text-sm sm:text-base disabled:bg-teal-300 flex items-center justify-center min-w-[120px]"
                 >
                   {isLoading ? (
