@@ -29,6 +29,13 @@ const PengajuanKAK = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
+  const [isLpjModalOpen, setIsLpjModalOpen] = useState(false);
+  const [lpjTargetId, setLpjTargetId] = useState<number | null>(null);
+  const [lpjFormData, setLpjFormData] = useState({
+    link: "",
+    total_anggaran: "",
+  });
+
   const [formData, setFormData] = useState({
     nama_kegiatan: "",
     divisi: "",
@@ -180,6 +187,32 @@ const PengajuanKAK = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const handleLpjClick = () => {
+    setLpjTargetId(null);
+    setLpjFormData({ link: "", total_anggaran: "" });
+    setIsLpjModalOpen(true);
+  };
+
+  const handleLpjSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      // TODO: Sambungkan ke endpoint backend jika sudah tersedia
+      console.log("Submit LPJ Data:", { id: lpjTargetId, ...lpjFormData });
+      
+      // Simulasi loading
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      alert("Berhasil! Tampilan pengajuan LPJ sudah selesai. Nanti tinggal kita hubungkan dengan Backend.");
+      setIsLpjModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Optimistic Update untuk Hapus Data
   const confirmDelete = async () => {
     if (deleteTargetId === null) return;
@@ -254,18 +287,26 @@ const PengajuanKAK = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
-            Pengajuan Kerangka Acuan Kerja (KAK)
+            Pengajuan KAK & LPJ
           </h1>
           <p className="text-gray-500 text-sm md:text-base mt-1">
-            Kelola pengajuan dan persetujuan dokumen KAK kegiatan BEM.
+            Kelola pengajuan dokumen Kerangka Acuan Kerja (KAK) dan Laporan Pertanggungjawaban (LPJ).
           </p>
         </div>
-        <button
-          onClick={handleAddClick}
-          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition shadow-sm font-medium w-full sm:w-auto"
-        >
-          + Ajukan KAK Baru
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            onClick={handleLpjClick}
+            className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition shadow-sm font-medium w-full sm:w-auto"
+          >
+            + Ajukan LPJ Baru
+          </button>
+          <button
+            onClick={handleAddClick}
+            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition shadow-sm font-medium w-full sm:w-auto"
+          >
+            + Ajukan KAK Baru
+          </button>
+        </div>
       </div>
 
       {/* Statistik Ringkas */}
@@ -734,6 +775,74 @@ const PengajuanKAK = () => {
                 Ya, Hapus
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PENGAJUAN LPJ */}
+      {isLpjModalOpen && (
+        <div className="fixed inset-0 bg-white/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-[95%] sm:w-full max-w-lg p-5 sm:p-6 text-left">
+            <h3 className="text-xl font-bold text-gray-900 mb-1">
+              Pengajuan LPJ
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">Laporan Pertanggungjawaban Kegiatan</p>
+            
+            <form onSubmit={handleLpjSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Link Dokumen LPJ <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="Contoh: https://docs.google.com/..."
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 text-base sm:text-sm"
+                  value={lpjFormData.link}
+                  onChange={(e) =>
+                    setLpjFormData({ ...lpjFormData, link: e.target.value })
+                  }
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Total Anggaran Terpakai (Rp) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  placeholder="Contoh: 4500000"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 text-base sm:text-sm"
+                  value={lpjFormData.total_anggaran}
+                  onChange={(e) =>
+                    setLpjFormData({ ...lpjFormData, total_anggaran: e.target.value })
+                  }
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsLpjModalOpen(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-sm sm:text-base"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 text-white bg-teal-600 hover:bg-teal-700 rounded-lg font-medium text-sm sm:text-base disabled:bg-teal-300 flex items-center justify-center min-w-[120px]"
+                >
+                  {isLoading ? (
+                    <svg className="w-5 h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : "Ajukan LPJ"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

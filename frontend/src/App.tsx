@@ -19,7 +19,7 @@ export default function App() {
         return <Dashboard />;
       case "Kegiatan":
         return <Proker />;
-      case "Pengajuan KAK":
+      case "Pengajuan KAK & LPJ":
         return <PengajuanKAK />;
       case "Anggaran":
         return <Anggaran />;
