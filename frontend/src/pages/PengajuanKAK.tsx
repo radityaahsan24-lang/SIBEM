@@ -133,6 +133,21 @@ const PengajuanKAK = () => {
           : null,
       };
 
+      // --- LOGIKA VALIDASI 50% PAGU AWAL ---
+      const DANA_PAGU_AWAL = 15000000; // Contoh Pagu Awal: Rp 15.000.000
+      if (payload.anggaran_estimasi && payload.anggaran_estimasi >= (DANA_PAGU_AWAL * 0.5)) {
+        alert(
+          `SISTEM OTOMATIS MENOLAK!\n\n` +
+          `Anggaran kegiatan yang diajukan melebihi batas maksimal 50% dari Dana Pagu Awal.\n` +
+          `- Dana Pagu Awal: Rp 15.000.000\n` +
+          `- Batas Maksimal (50%): Rp 7.500.000\n` +
+          `- Pengajuan Anda: Rp ${payload.anggaran_estimasi.toLocaleString('id-ID')}`
+        );
+        setIsLoading(false);
+        return;
+      }
+      // -------------------------------------
+
       if (isEditMode && editId !== null) {
         await axios.put(
           `http://127.0.0.1:8000/api/kak/${editId}`,
